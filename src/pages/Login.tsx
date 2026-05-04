@@ -27,7 +27,7 @@ export default function Login() {
       <div className="w-full h-screen flex overflow-hidden relative z-10">
         
         {/* Left Side: Login Form */}
-        <div className="w-full lg:w-1/2 pr-[96px] pl-[96px] py-[88px] sm:pr-[128px] sm:pl-[128px] sm:py-[104px] flex flex-col justify-center">
+        <div className="w-full lg:w-1/2 px-4 py-[88px] sm:px-6 sm:py-[104px] lg:px-[128px] flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-8 justify-center lg:justify-start">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#3B82F6"/>
@@ -126,28 +126,14 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Right Side: Galaxy Image & Promo */}
+        {/* Right Side: Image */}
         <div className="hidden lg:flex lg:w-1/2 h-full">
-          <div className="w-full h-full relative overflow-hidden flex flex-col justify-start items-center text-center">
-            {/* Galaxy Background */}
+          <div className="w-full h-full relative overflow-hidden flex flex-col justify-center items-center">
+            {/* Background Image */}
             <div 
               className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 hover:scale-105"
-              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2464&auto=format&fit=crop)' }}
+              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=2464&auto=format&fit=crop)' }}
             />
-            {/* Overlay Gradient for readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#1C2331]/30 via-transparent to-[#1C2331]/90 z-0 pointer-events-none" />
-
-            <div className="relative z-10 px-12 pt-16 mt-4 mix-blend-plus-lighter">
-              <h2 className="text-[32px] font-bold text-white mb-4 drop-shadow-md">Smarter Workflow Starts Here</h2>
-              <p className="text-white/90 leading-relaxed text-[15px] max-w-sm mx-auto drop-shadow-md pb-8">
-                Monitor team performance, manage operations processes, and keep teams aligned with a centralized dashboard.
-              </p>
-              
-              <div className="mt-8 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-xl text-[14px] font-medium">
-                <span className="text-yellow-200">✨</span> Support Teams with Better Insights <span className="text-yellow-200">✨</span>
-              </div>
-            </div>
-            
           </div>
         </div>
 
