@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Rectangle } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Rectangle, RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
 import { PERFORMANCE_DATA } from "../data/mockData";
 import { HugeIcon } from "./HugeIcon";
 import { MoreIcon } from "@hugeicons/core-free-icons";
@@ -79,6 +79,7 @@ export function PerformanceOverviewChart() {
               tickLine={false} 
               tick={{ fontSize: 13, fill: '#A1A1AA', fontWeight: 500 }} 
               dy={15} 
+              height={40}
             />
             <YAxis 
               axisLine={false} 
@@ -94,6 +95,7 @@ export function PerformanceOverviewChart() {
             <Bar 
               dataKey="sales" 
               radius={6}
+              activeBar={false}
             >
               {PERFORMANCE_DATA.map((entry, index) => {
                 // If no hover, index 3 is highlighted by default to match design
@@ -104,6 +106,7 @@ export function PerformanceOverviewChart() {
             <Bar 
               dataKey="revenue" 
               radius={6}
+              activeBar={false}
             >
               {PERFORMANCE_DATA.map((entry, index) => {
                 const isActive = activeIndex !== null ? index === activeIndex : index === 3;
@@ -117,106 +120,101 @@ export function PerformanceOverviewChart() {
   );
 }
 
-const GAUGE_COLORS = [
-  "#0040A1", "#0552CA", "#1667EA", "#2B7BFF", "#438DFF",
-  "#5A9FFF", "#72B1FF", "#8BC3FF", "#A4D5FF", "#BEE7FF", "#D8F8FF"
-];
-
 export function SalesOverviewGauge() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-
-  const GAUGE_DATA = Array.from({ length: 15 }).map((_, i) => ({
-    value: 1,
-    index: i,
-    fill: i < 11 ? GAUGE_COLORS[i] : "#F3F4F6",
-    isActive: i < 11
-  }));
+  const RADIAL_DATA = [
+    { name: 'Inner', value: 45, fill: '#F15F36' },
+    { name: 'Middle', value: 65, fill: '#3E8662' },
+    { name: 'Outer', value: 85, fill: '#2A6347' }
+  ];
 
   return (
     <div className="bg-white p-6 rounded-[24px] shadow-sm border border-[#E5E5E5] flex flex-col w-full h-full relative overflow-hidden">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-[#1A1A1A] text-[18px] font-bold">Sales Overview</h2>
-        <div className="w-8 h-8 rounded-full border border-[#E5E5E5] flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
-          <HugeIcon icon={MoreIcon} className="w-4 h-4 text-[#A1A1AA]" />
+      <div className="flex justify-between items-start mb-2">
+        <div>
+           <h2 className="text-[#1A1A1A] text-[18px] font-bold">Product statistic</h2>
+           <p className="text-[#A1A1AA] text-[13px] mt-0.5">Track your product sales</p>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5E5E5] text-[12px] font-medium text-[#71717A] cursor-pointer hover:bg-gray-50 transition-colors">
+          Today
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </div>
       
-      <div className="flex-1 w-full relative flex flex-col items-center justify-center min-h-[260px]">
-        <div className="w-full relative flex-1 min-h-[160px] -mt-4">
+      <div className="flex flex-col md:flex-col lg:flex-row items-center justify-between gap-2 mt-4 mb-6">
+        <div className="relative w-[180px] h-[180px] flex-shrink-0">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-              <Pie
-                data={GAUGE_DATA}
-                cx="50%"
-                cy="100%"
-                startAngle={180}
-                endAngle={0}
-                innerRadius="65%"
-                outerRadius="95%"
-                paddingAngle={4}
+            <RadialBarChart 
+              cx="50%" cy="50%" 
+              innerRadius="45%" outerRadius="100%" 
+              barSize={12} 
+              data={RADIAL_DATA}
+              startAngle={50}
+              endAngle={310}
+            >
+              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+              <RadialBar
+                background={{ fill: '#F4F4F5' }}
                 dataKey="value"
-                stroke="none"
-                cornerRadius={4}
-                onMouseEnter={(_, index) => setActiveIndex(index)}
-                onMouseLeave={() => setActiveIndex(null)}
-              >
-                {GAUGE_DATA.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={entry.fill} 
-                    opacity={activeIndex === null ? 1 : activeIndex === index ? 1 : 0.4}
-                    style={{ 
-                      transition: 'opacity 0.2s ease, transform 0.2s ease', 
-                      transform: activeIndex === index ? 'scale(1.02)' : 'scale(1)', 
-                      transformOrigin: '50% 100%',
-                      cursor: entry.isActive ? 'pointer' : 'default'
-                    }}
-                  />
-                ))}
-              </Pie>
+                cornerRadius={100}
+              />
               <Tooltip 
+                cursor={{ fill: 'transparent' }}
                 content={({ active, payload }) => {
-                  if (active && payload && payload.length && payload[0].payload.isActive) {
-                    const idx = payload[0].payload.index;
+                  if (active && payload && payload.length) {
                     return (
                       <div className="bg-[#1A1A1A] px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold shadow-lg">
-                         Target Area {idx + 1}
+                         {payload[0].value}%
                       </div>
                     );
                   }
                   return null;
                 }}
-                cursor={{ fill: 'transparent' }}
               />
-            </PieChart>
+            </RadialBarChart>
           </ResponsiveContainer>
-          <div className="absolute left-[50%] bottom-0 -translate-x-1/2 flex flex-col items-center justify-end text-center mb-4 pointer-events-none">
-            <h3 className="text-4xl font-bold text-[#1A1A1A] leading-tight">70.8%</h3>
-            <p className="text-[13px] font-medium text-[#71717A] mt-1">Sales Growth</p>
+        </div>
+        
+        <div className="flex flex-col items-center lg:items-start text-center lg:text-left mr-4">
+          <h3 className="text-[36px] font-bold text-[#1A1A1A] leading-tight tracking-tight">8.564</h3>
+          <p className="text-[13px] font-medium text-[#A1A1AA] mt-0 mb-3">Product Sales</p>
+          <span className="bg-[#86efac] text-[#14532d] px-3 py-1 rounded-md text-[13px] font-bold">
+            +6.4%
+          </span>
+        </div>
+      </div>
+      
+      <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-gray-50">
+        <div className="flex items-center justify-between bg-white hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-[#F4F4F5] rounded-xl flex items-center justify-center text-[#71717A]">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+            </div>
+            <span className="text-[15px] font-semibold text-[#1A1A1A]">Electronic</span>
+          </div>
+          <div className="flex items-center gap-4">
+             <span className="text-[15px] font-bold text-[#1A1A1A]">3.250</span>
+             <span className="bg-[#86efac] text-[#14532d] px-2 py-0.5 rounded text-[12px] font-bold w-[52px] text-center">
+               +2.4%
+             </span>
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 w-full mt-auto pt-8">
-          <div className="bg-[#F9FAFB] rounded-2xl p-4 border border-[#F3F4F6] hover:border-[#E5E7EB] transition-colors cursor-default">
-            <p className="text-[12px] font-medium text-[#71717A] mb-2">Number of Sales</p>
-            <div className="flex items-center justify-between">
-              <span className="text-[18px] font-bold text-[#1A1A1A]">2,343</span>
-              <span className="text-[#D97706] bg-[#FFF9EA] px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
-                4.5% <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-              </span>
+        <div className="flex items-center justify-between bg-white hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-[#F4F4F5] rounded-xl flex items-center justify-center text-[#71717A]">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
             </div>
+            <span className="text-[15px] font-semibold text-[#1A1A1A]">Furniture</span>
           </div>
-          <div className="bg-[#F9FAFB] rounded-2xl p-4 border border-[#F3F4F6] hover:border-[#E5E7EB] transition-colors cursor-default">
-             <p className="text-[12px] font-medium text-[#71717A] mb-2">Total Revenue</p>
-             <div className="flex items-center justify-between">
-               <span className="text-[18px] font-bold text-[#1A1A1A]">$30.9k</span>
-               <span className="text-[#10B981] bg-[#ECFDF5] px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
-                 4.5% <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-               </span>
-             </div>
+          <div className="flex items-center gap-4">
+             <span className="text-[15px] font-bold text-[#1A1A1A]">5.250</span>
+             <span className="bg-[#86efac] text-[#14532d] px-2 py-0.5 rounded text-[12px] font-bold w-[52px] text-center">
+               +1.7%
+             </span>
           </div>
         </div>
       </div>
+      
     </div>
   );
 }
