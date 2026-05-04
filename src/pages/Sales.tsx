@@ -1,0 +1,156 @@
+import { useState } from "react";
+import { SALES_DATA } from "../data/mockData";
+import { Add01Icon, ReceiptDollarIcon as Receipt01Icon, PencilEdit02Icon, MoreIcon, EyeIcon } from "@hugeicons/core-free-icons";
+import { HugeIcon } from "../components/HugeIcon";
+import InvoiceModal from "../components/InvoiceModal";
+import { cn } from "../lib/utils";
+
+export default function Sales() {
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+
+  return (
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full h-full">
+      {/* Header section with Actions */}
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-xl font-semibold text-[#1A1A1A] mb-1">Sales</h1>
+          <p className="text-sm text-[#71717A] font-medium">Create invoices and view sales history.</p>
+        </div>
+        <div className="flex gap-4">
+          <button className="px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 text-[#1A1A1A]">
+            <HugeIcon icon={Receipt01Icon} className="w-4 h-4" />
+            View Invoices
+          </button>
+          <button className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-black">
+            <HugeIcon icon={Add01Icon} className="w-4 h-4" />
+            New Sales Invoice
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        {/* Sales Entry Form Card */}
+        <div className="bg-white p-5 rounded-2xl border border-[#E5E5E5] shadow-sm">
+          <h2 className="text-sm font-semibold text-[#1A1A1A] mb-5">Record New Sale</h2>
+          
+          <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="flex flex-col gap-1.5 lg:col-span-2">
+              <label htmlFor="itemName" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Item Name</label>
+              <input id="itemName" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="e.g. iPhone 14 Case" />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="category" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Category</label>
+              <select id="category" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] bg-white">
+                <option value="">Select category...</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Smartphones">Smartphones</option>
+                <option value="Computers">Computers</option>
+                <option value="Parts">Parts</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="qty" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Quantity</label>
+              <input id="qty" type="number" min="1" defaultValue="1" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" />
+            </div>
+            
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="price" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Unit Price</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A] font-mono">$</span>
+                <input id="price" type="number" step="0.01" className="h-10 pl-7 pr-3 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="0.00" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5 lg:col-span-3">
+              <label className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Payment Method</label>
+              <div className="flex gap-2">
+                {['Card', 'Cash', 'Transfer'].map((method) => (
+                  <button key={method} type="button" className="h-10 px-6 border border-[#E5E5E5] rounded-lg text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F5] focus:border-[#1A1A1A] focus:bg-[#F5F5F5] transition-colors">
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 flex items-end justify-between lg:justify-end gap-6">
+              <div className="flex flex-col mb-1 lg:mb-0 lg:text-right">
+                <span className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Total</span>
+                <span className="text-2xl font-bold text-[#1A1A1A] mt-1">$0.00</span>
+              </div>
+              <button type="submit" className="h-10 px-6 bg-[#1A1A1A] text-white text-sm font-medium rounded-lg hover:bg-black transition-colors whitespace-nowrap">
+                Record Sale
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Sales Table Box */}
+        <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm flex flex-col">
+          <div className="px-6 py-4 border-b border-[#E5E5E5] flex justify-between items-center">
+            <h2 className="text-sm font-semibold text-[#1A1A1A]">Sales History</h2>
+          </div>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left text-[13px] text-[#1A1A1A]">
+              <thead className="text-[#8B8D97] font-medium border-b border-[#E5E5E5]">
+                <tr>
+                  <th className="px-6 py-4 w-12 font-normal"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black" /></th>
+                  <th className="px-6 py-4 font-normal">Invoice ID</th>
+                  <th className="px-6 py-4 font-normal">Date</th>
+                  <th className="px-6 py-4 font-normal whitespace-nowrap">Item & Category</th>
+                  <th className="px-6 py-4 font-normal text-right">Qty</th>
+                  <th className="px-6 py-4 font-normal text-right">Amount</th>
+                  <th className="px-6 py-4 font-normal">Payment</th>
+                  <th className="px-6 py-4 font-normal text-right text-transparent whitespace-nowrap">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F0F0F0]">
+                {SALES_DATA.map((sale) => (
+                  <tr key={sale.id} className="hover:bg-[#FAFAFA] transition-colors group">
+                    <td className="px-6 py-4"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black opacity-50 group-hover:opacity-100 transition-opacity" /></td>
+                    <td className="px-6 py-4 text-[#8B8D97]">{sale.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-[#1A1A1A]">{sale.date}</td>
+                    <td className="px-6 py-4 min-w-[180px]">
+                      <div className="font-medium">{sale.item}</div>
+                      <div className="text-[12px] text-[#A1A1AA] mt-0.5">{sale.category}</div>
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium">{sale.qty}</td>
+                    <td className="px-6 py-4 text-right font-medium">${sale.amount.toFixed(2)}</td>
+                    <td className="px-6 py-4 font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", sale.paymentMethod.toLowerCase() === "cash" ? "bg-green-500" : "bg-blue-500")} />
+                        {sale.paymentMethod}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-3 text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => setSelectedInvoice(sale)}
+                          className="hover:text-[#1A1A1A]"
+                          title="View Invoice"
+                        >
+                          <HugeIcon icon={EyeIcon} className="w-4 h-4" />
+                        </button>
+                        <button className="hover:text-[#1A1A1A]">
+                          <HugeIcon icon={PencilEdit02Icon} className="w-4 h-4" />
+                        </button>
+                        <button className="hover:text-[#1A1A1A]">
+                          <HugeIcon icon={MoreIcon} className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      {selectedInvoice && (
+        <InvoiceModal invoice={selectedInvoice} onClose={() => setSelectedInvoice(null)} />
+      )}
+    </div>
+  );
+}

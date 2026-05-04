@@ -1,0 +1,117 @@
+src/pages/Repairs.tsx:import { Plus, Search, Filter, MoreVertical, Edit2 } from "lucide-react";
+src/pages/Repairs.tsx:  const filteredRepairs = REPAIR_DATA.filter((repair) => 
+src/pages/Repairs.tsx:              <input id="customer" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="First Last" />
+src/pages/Repairs.tsx:              <input id="phone" type="tel" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="(555) 000-0000" />
+src/pages/Repairs.tsx:              <input id="deviceType" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="e.g. iPhone 13 Pro" />
+src/pages/Repairs.tsx:              <input id="issue" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="Briefly describe the problem..." />
+src/pages/Repairs.tsx:                <input id="cost" type="number" step="0.01" className="h-10 pl-7 pr-3 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="0.00" />
+src/pages/Repairs.tsx:              <select id="jobStatus" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] bg-white">
+src/pages/Repairs.tsx:                <Plus className="w-4 h-4" />
+src/pages/Repairs.tsx:                  <th className="px-6 py-4 w-12 font-normal"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black" /></th>
+src/pages/Repairs.tsx:                {filteredRepairs.map((repair) => (
+src/pages/Repairs.tsx:                    <td className="px-6 py-4"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black opacity-50 group-hover:opacity-100" /></td>
+src/pages/Repairs.tsx:                          <Edit2 className="w-4 h-4" />
+src/pages/Repairs.tsx:                          <MoreVertical className="w-4 h-4" />
+src/pages/Repairs.tsx:                {filteredRepairs.length === 0 && (
+src/pages/Login.tsx:import { Navigate } from 'react-router-dom';
+src/pages/Dashboard.tsx:import { DollarSign, Wrench, CheckCircle, Package, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
+src/pages/Dashboard.tsx:export default function Dashboard() {
+src/pages/Dashboard.tsx:    { label: "Today's Revenue", value: `$${MOCK_KPI_DATA.todayRevenue.toFixed(2)}`, delta: "12.5%", isPositive: true, icon: DollarSign, subtext: "+$150.00 from yesterday" },
+src/pages/Dashboard.tsx:    { label: "Open Repairs", value: MOCK_KPI_DATA.openRepairs, delta: "2.1%", isPositive: false, icon: Wrench, subtext: "-2 from yesterday" },
+src/pages/Dashboard.tsx:    { label: "Completed Jobs", value: MOCK_KPI_DATA.completedJobs, delta: "4.0%", isPositive: true, icon: CheckCircle, subtext: "92% goal reached" },
+src/pages/Dashboard.tsx:    { label: "New Sales", value: MOCK_KPI_DATA.newSales, delta: "24.5%", isPositive: true, icon: Package, subtext: "Avg. $45 / sale" },
+src/pages/Dashboard.tsx:                {kpi.isPositive ? <ArrowUp className="w-3 h-3 text-[#10B981]" /> : <ArrowDown className="w-3 h-3 text-[#EF4444]" />}
+src/pages/Dashboard.tsx:              <ArrowRight className="w-4 h-4 text-[#A1A1AA] group-hover:text-[#1A1A1A] transition-colors" />
+src/pages/Dashboard.tsx:                      <Package className="w-4 h-4 text-[#1A1A1A]" />
+src/pages/Dashboard.tsx:                      <Wrench className="w-4 h-4 text-[#1A1A1A]" />
+src/pages/Reports.tsx:import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+src/pages/Reports.tsx:import { DollarSign, CheckSquare, Activity, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
+src/pages/Reports.tsx:    { label: "Total Revenue (7d)", value: "$9,700.00", icon: DollarSign, delta: "7.52%", isPositive: true, subtext: "+$3,256 from last month" },
+src/pages/Reports.tsx:    { label: "Repairs Completed", value: "32", icon: CheckSquare, delta: "3.56%", isPositive: true, subtext: "+12 from last month" },
+src/pages/Reports.tsx:                {s.isPositive ? <ArrowUp className="w-3 h-3 text-[#10B981]" /> : <ArrowDown className="w-3 h-3 text-[#EF4444]" />}
+src/pages/Reports.tsx:              <ArrowRight className="w-4 h-4 text-[#A1A1AA] group-hover:text-[#1A1A1A] transition-colors" />
+src/pages/Reports.tsx:              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0F0F0" />
+src/pages/Sales.tsx:import { Plus, Receipt, Edit2, MoreVertical, Eye } from "lucide-react";
+src/pages/Sales.tsx:            <Receipt className="w-4 h-4" />
+src/pages/Sales.tsx:            <Plus className="w-4 h-4" />
+src/pages/Sales.tsx:              <input id="itemName" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="e.g. iPhone 14 Case" />
+src/pages/Sales.tsx:              <select id="category" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] bg-white">
+src/pages/Sales.tsx:              <input id="qty" type="number" min="1" defaultValue="1" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" />
+src/pages/Sales.tsx:                <input id="price" type="number" step="0.01" className="h-10 pl-7 pr-3 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="0.00" />
+src/pages/Sales.tsx:                  <th className="px-6 py-4 w-12 font-normal"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black" /></th>
+src/pages/Sales.tsx:                    <td className="px-6 py-4"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black opacity-50 group-hover:opacity-100 transition-opacity" /></td>
+src/pages/Sales.tsx:                          <Eye className="w-4 h-4" />
+src/pages/Sales.tsx:                          <Edit2 className="w-4 h-4" />
+src/pages/Sales.tsx:                          <MoreVertical className="w-4 h-4" />
+src/components/Layout.tsx:import { Outlet, NavLink } from "react-router-dom";
+src/components/Layout.tsx:import { LayoutDashboard, ShoppingCart, Wrench, BarChart3, Bell, Search, LogOut } from "lucide-react";
+src/components/Layout.tsx:export default function Layout() {
+src/components/Layout.tsx:  const { user, logout } = useAuth();
+src/components/Layout.tsx:    ...(user?.role === 'admin' ? [{ label: "Dashboard", path: "/", icon: LayoutDashboard }] : []),
+src/components/Layout.tsx:    { label: "Sales", path: "/sales", icon: ShoppingCart },
+src/components/Layout.tsx:    { label: "Repairs", path: "/repairs", icon: Wrench },
+src/components/Layout.tsx:              onClick={logout}
+src/components/Layout.tsx:              title="Log out"
+src/components/Layout.tsx:              <LogOut className="w-4 h-4" />
+src/components/Layout.tsx:          {/* Header left - Page Context could go here or search */}
+src/components/Layout.tsx:            <Search className="w-4 h-4 text-[#71717A]" />
+src/components/Layout.tsx:              placeholder="Search repairs, customers, invoices..." 
+src/components/Layout.tsx:              className="bg-transparent border-none outline-none text-sm font-medium text-[#1A1A1A] w-full placeholder:text-[#A1A1AA]"
+src/components/Layout.tsx:          <Outlet />
+src/components/ProtectedRoute.tsx:import { Navigate, Outlet } from 'react-router-dom';
+src/components/ProtectedRoute.tsx:export default function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
+src/components/ProtectedRoute.tsx:  return <Outlet />;
+src/components/InvoiceModal.tsx:import { X, Printer } from "lucide-react";
+src/components/InvoiceModal.tsx:    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm print:bg-white print:backdrop-blur-none">
+src/components/InvoiceModal.tsx:        className="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:rounded-none"
+src/components/InvoiceModal.tsx:        {/* Header - hidden when printing */}
+src/components/InvoiceModal.tsx:        <div className="px-6 py-4 border-b border-[#E5E5E5] flex justify-between items-center print:hidden">
+src/components/InvoiceModal.tsx:              onClick={() => window.print()}
+src/components/InvoiceModal.tsx:              <Printer className="w-4 h-4" />
+src/components/InvoiceModal.tsx:              Print
+src/components/InvoiceModal.tsx:        {/* Printable Area */}
+src/components/InvoiceModal.tsx:        <div id="invoice-print-area" className="p-8 overflow-y-auto print:overflow-visible">
+src/App.tsx:import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+src/App.tsx:import Layout from "./components/Layout";
+src/App.tsx:import Dashboard from "./pages/Dashboard";
+src/App.tsx:import ProtectedRoute from "./components/ProtectedRoute";
+src/App.tsx:  return <Dashboard />;
+src/App.tsx:      <BrowserRouter>
+src/App.tsx:        <Routes>
+src/App.tsx:          <Route path="/login" element={<Login />} />
+src/App.tsx:          <Route element={<ProtectedRoute />}>
+src/App.tsx:            <Route path="/" element={<Layout />}>
+src/App.tsx:              <Route index element={<RootRedirect />} />
+src/App.tsx:              <Route path="sales" element={<Sales />} />
+src/App.tsx:              <Route path="repairs" element={<Repairs />} />
+src/App.tsx:              {/* Admin only routes */}
+src/App.tsx:              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+src/App.tsx:                <Route path="reports" element={<Reports />} />
+src/App.tsx:              </Route>
+src/App.tsx:            </Route>
+src/App.tsx:          </Route>
+src/App.tsx:        </Routes>
+src/App.tsx:      </BrowserRouter>
+src/data/mockData.ts:import { LucideIcon, FileText, ShoppingCart, PenTool, LayoutDashboard, BarChart3 } from "lucide-react";
+src/data/mockData.ts:  { id: "INV-1001", date: "2026-05-03", item: "AirPods Pro", category: "Accessories", qty: 1, amount: 249.00, paymentMethod: "Credit Card" },
+src/data/mockData.ts:  { id: "INV-1005", date: "2026-05-01", item: "iPad Air", category: "Tablets", qty: 1, amount: 599.00, paymentMethod: "Credit Card" },
+src/index.css:@media print {
+src/index.css:  #invoice-print-area, #invoice-print-area * {
+src/index.css:  #invoice-print-area {
+src/context/AuthContext.tsx:  logout: () => void;
+src/context/AuthContext.tsx:  const logout = () => setUser(null);
+src/context/AuthContext.tsx:    <AuthContext.Provider value={{ user, login, logout }}>
+metadata.json:  "name": "RepairTech Pro Dashboard",
+metadata.json:  "description": "Sales & Repair Management Dashboard for a phone and computer repair shop with a clean light theme.",
+tsconfig.json:    "skipLibCheck": true,
+package.json:    "react-router-dom": "^7.14.2",
+package-lock.json:  "packages": {
+package-lock.json:        "react-router-dom": "^7.14.2",
+package-lock.json:      "integrity": "sha512-eAmLkjDjAFCVXg7A1unxHsLf961m6y17QFqXqAXGj/gVkKFrEICfStRfwUlGNfeCEjNRa32JEWOUTlYXPyyKvA==",
+package-lock.json:    "node_modules/react-router": {
+package-lock.json:      "resolved": "https://registry.npmjs.org/react-router/-/react-router-7.14.2.tgz",
+package-lock.json:    "node_modules/react-router-dom": {
+package-lock.json:      "resolved": "https://registry.npmjs.org/react-router-dom/-/react-router-dom-7.14.2.tgz",
+package-lock.json:        "react-router": "7.14.2"
+package-lock.json:    "node_modules/react-router/node_modules/cookie": {
+vite.config.ts:      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
