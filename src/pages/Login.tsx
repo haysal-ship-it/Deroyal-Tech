@@ -27,7 +27,7 @@ export default function Login() {
       <div className="w-full h-screen flex overflow-hidden relative z-10">
         
         {/* Left Side: Login Form */}
-        <div className="w-full lg:w-1/2 px-8 py-12 sm:px-16 sm:py-16 flex flex-col justify-center">
+        <div className="w-full lg:w-1/2 pr-[96px] pl-[96px] py-[88px] sm:pr-[128px] sm:pl-[128px] sm:py-[104px] flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-8 justify-center lg:justify-start">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#3B82F6"/>
@@ -127,12 +127,12 @@ export default function Login() {
         </div>
 
         {/* Right Side: Galaxy Image & Promo */}
-        <div className="hidden lg:flex lg:w-1/2 p-3 pb-3 pr-3">
-          <div className="w-full h-full rounded-[24px] relative overflow-hidden flex flex-col justify-start items-center text-center">
+        <div className="hidden lg:flex lg:w-1/2 h-full">
+          <div className="w-full h-full relative overflow-hidden flex flex-col justify-start items-center text-center">
             {/* Galaxy Background */}
             <div 
               className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 hover:scale-105"
-              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2464&auto=format&fit=crop)' }}
+              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2464&auto=format&fit=crop)' }}
             />
             {/* Overlay Gradient for readability */}
             <div className="absolute inset-0 bg-gradient-to-b from-[#1C2331]/30 via-transparent to-[#1C2331]/90 z-0 pointer-events-none" />
