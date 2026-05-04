@@ -42,11 +42,11 @@ export default function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
                 <div className="w-8 h-8 bg-[#1A1A1A] rounded-lg flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
                 </div>
-                <h1 className="text-xl font-bold tracking-tight text-[#1A1A1A]">FixFlow Pro</h1>
+                <h1 className="text-xl font-bold tracking-tight text-[#1A1A1A]">DeRoyalTech</h1>
               </div>
               <p className="text-sm text-[#71717A]">123 Tech Avenue, Suite 100</p>
               <p className="text-sm text-[#71717A]">San Francisco, CA 94105</p>
-              <p className="text-sm text-[#71717A]">contact@fixflowpro.com</p>
+              <p className="text-sm text-[#71717A]">contact@deroyaltech.com</p>
             </div>
             <div className="text-right">
               <h2 className="text-2xl font-bold text-[#1A1A1A] uppercase tracking-wider mb-2">Invoice</h2>

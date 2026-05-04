@@ -122,93 +122,95 @@ export function PerformanceOverviewChart() {
 
 export function SalesOverviewGauge() {
   const RADIAL_DATA = [
-    { name: 'Inner', value: 45, fill: '#F15F36' },
-    { name: 'Middle', value: 65, fill: '#3E8662' },
-    { name: 'Outer', value: 85, fill: '#2A6347' }
+    { name: 'Electronic', value: 65, fill: '#3E8662' },
+    { name: 'Hardware', value: 45, fill: '#F15F36' },
+    { name: 'Furniture', value: 85, fill: '#2A6347' }
   ];
 
   return (
-    <div className="bg-white p-6 rounded-[24px] shadow-sm border border-[#E5E5E5] flex flex-col w-full h-full relative overflow-hidden">
+    <div className="bg-white p-6 sm:p-8 rounded-[24px] shadow-sm border border-[#E5E5E5] flex flex-col w-full h-full relative overflow-hidden">
       <div className="flex justify-between items-start mb-2">
         <div>
-           <h2 className="text-[#1A1A1A] text-[18px] font-bold">Product statistic</h2>
-           <p className="text-[#A1A1AA] text-[13px] mt-0.5">Track your product sales</p>
+           <h2 className="text-[#1A1A1A] text-[20px] font-bold">Product statistic</h2>
+           <p className="text-[#A1A1AA] text-[14px] mt-1">Track your product sales</p>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5E5E5] text-[12px] font-medium text-[#71717A] cursor-pointer hover:bg-gray-50 transition-colors">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5E5E5] text-[13px] font-medium text-[#71717A] cursor-pointer hover:bg-gray-50 transition-colors">
           Today
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </div>
       
-      <div className="flex flex-col md:flex-col lg:flex-row items-center justify-between gap-2 mt-4 mb-6">
-        <div className="relative w-[180px] h-[180px] flex-shrink-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart 
-              cx="50%" cy="50%" 
-              innerRadius="45%" outerRadius="100%" 
-              barSize={12} 
-              data={RADIAL_DATA}
-              startAngle={50}
-              endAngle={310}
-            >
-              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-              <RadialBar
-                background={{ fill: '#F4F4F5' }}
-                dataKey="value"
-                cornerRadius={100}
-              />
-              <Tooltip 
-                cursor={{ fill: 'transparent' }}
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-[#1A1A1A] px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold shadow-lg">
-                         {payload[0].value}%
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </RadialBarChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="flex flex-col items-center lg:items-start text-center lg:text-left mr-4">
-          <h3 className="text-[36px] font-bold text-[#1A1A1A] leading-tight tracking-tight">8.564</h3>
-          <p className="text-[13px] font-medium text-[#A1A1AA] mt-0 mb-3">Product Sales</p>
-          <span className="bg-[#86efac] text-[#14532d] px-3 py-1 rounded-md text-[13px] font-bold">
-            +6.4%
-          </span>
+      <div className="flex-1 flex flex-col justify-center">
+        <div className="flex flex-row items-center justify-center gap-6 sm:gap-12 w-full my-4 sm:my-8 scale-95 sm:scale-100">
+          <div className="relative w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] flex-shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadialBarChart 
+                cx="50%" cy="50%" 
+                innerRadius="45%" outerRadius="100%" 
+                barSize={14} 
+                data={RADIAL_DATA}
+                startAngle={300}
+                endAngle={60}
+              >
+                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                <RadialBar
+                  background={{ fill: '#F4F4F5' }}
+                  dataKey="value"
+                  cornerRadius={100}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'transparent' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-[#1A1A1A] px-3 py-1.5 rounded-lg text-white text-[13px] font-semibold shadow-lg">
+                           {payload[0].value}%
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </RadialBarChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div className="flex flex-col items-start justify-center">
+            <h3 className="text-[36px] sm:text-[44px] font-bold text-[#1A1A1A] leading-none mb-2 tracking-tight">8.564</h3>
+            <p className="text-[13px] sm:text-[14px] font-medium text-[#A1A1AA] mb-4">Product Sales</p>
+            <span className="bg-[#bbf7d0] text-[#166534] px-3.5 py-1.5 rounded-full text-[13px] font-bold shadow-sm">
+              +6.4%
+            </span>
+          </div>
         </div>
       </div>
       
-      <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-gray-50">
-        <div className="flex items-center justify-between bg-white hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors cursor-pointer">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-[#F4F4F5] rounded-xl flex items-center justify-center text-[#71717A]">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-            </div>
-            <span className="text-[15px] font-semibold text-[#1A1A1A]">Electronic</span>
-          </div>
+      <div className="flex flex-col gap-2 mt-auto pt-6 border-t border-gray-100">
+        <div className="flex items-center justify-between bg-white hover:bg-gray-50 p-3 sm:px-4 -mx-3 sm:-mx-4 rounded-2xl transition-colors cursor-pointer group">
           <div className="flex items-center gap-4">
-             <span className="text-[15px] font-bold text-[#1A1A1A]">3.250</span>
-             <span className="bg-[#86efac] text-[#14532d] px-2 py-0.5 rounded text-[12px] font-bold w-[52px] text-center">
+            <div className="w-12 h-12 bg-[#F4F4F5] rounded-xl flex items-center justify-center text-[#71717A] group-hover:bg-white group-hover:shadow-[0_4px_12px_rgb(0,0,0,0.06)] transition-all">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+            </div>
+            <span className="text-[16px] font-semibold text-[#1A1A1A]">Electronic</span>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+             <span className="text-[16px] font-bold text-[#1A1A1A]">3.250</span>
+             <span className="bg-[#bbf7d0] text-[#166534] px-2.5 py-1 rounded-lg text-[13px] font-bold min-w-[60px] text-center shadow-sm">
                +2.4%
              </span>
           </div>
         </div>
         
-        <div className="flex items-center justify-between bg-white hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors cursor-pointer">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-[#F4F4F5] rounded-xl flex items-center justify-center text-[#71717A]">
-               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-            </div>
-            <span className="text-[15px] font-semibold text-[#1A1A1A]">Furniture</span>
-          </div>
+        <div className="flex items-center justify-between bg-white hover:bg-gray-50 p-3 sm:px-4 -mx-3 sm:-mx-4 rounded-2xl transition-colors cursor-pointer group">
           <div className="flex items-center gap-4">
-             <span className="text-[15px] font-bold text-[#1A1A1A]">5.250</span>
-             <span className="bg-[#86efac] text-[#14532d] px-2 py-0.5 rounded text-[12px] font-bold w-[52px] text-center">
+            <div className="w-12 h-12 bg-[#F4F4F5] rounded-xl flex items-center justify-center text-[#71717A] group-hover:bg-white group-hover:shadow-[0_4px_12px_rgb(0,0,0,0.06)] transition-all">
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            </div>
+            <span className="text-[16px] font-semibold text-[#1A1A1A]">Furniture</span>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+             <span className="text-[16px] font-bold text-[#1A1A1A]">5.250</span>
+             <span className="bg-[#bbf7d0] text-[#166534] px-2.5 py-1 rounded-lg text-[13px] font-bold min-w-[60px] text-center shadow-sm">
                +1.7%
              </span>
           </div>
