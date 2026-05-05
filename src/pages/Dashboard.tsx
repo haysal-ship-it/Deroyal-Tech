@@ -48,11 +48,11 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 min-h-[400px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2">
           <PerformanceOverviewChart />
         </div>
-        <div className="min-h-[400px]">
+        <div>
           <SalesOverviewGauge />
         </div>
       </div>
