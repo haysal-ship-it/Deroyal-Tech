@@ -41,6 +41,10 @@ export function PerformanceOverviewChart() {
     }
   };
 
+  const handleMouseLeave = () => {
+    setActiveIndex(null);
+  };
+
   return (
     <div className="bg-white p-6 rounded-[24px] shadow-sm border border-[#E5E5E5] flex flex-col w-full h-full">
       <div className="flex justify-between items-center mb-8">
@@ -60,7 +64,7 @@ export function PerformanceOverviewChart() {
             margin={{ top: 10, right: 10, left: 0, bottom: 25 }}
             barGap={8}
             onMouseMove={handleMouseMove}
-            onMouseLeave={() => setActiveIndex(null)}
+            onMouseLeave={handleMouseLeave}
           >
             <defs>
               <linearGradient id="blue-gradient" x1="0" y1="0" x2="0" y2="1">
@@ -120,67 +124,5 @@ export function PerformanceOverviewChart() {
   );
 }
 
-export function SalesOverviewGauge() {
-  const GAUGE_COLORS = [
-    "#2563EB", "#2563EB", "#2563EB", "#3B82F6", "#3B82F6", "#3B82F6",
-    "#60A5FA", "#93C5FD", "#BFDBFE", "#F4F6F8", "#F8FAFC", "#FDFEFF"
-  ];
-  const target = 20000;
-  const current = 3884;
-  
-  return (
-    <div className="bg-white p-6 sm:p-8 rounded-[24px] shadow-sm border border-[#E5E5E5] flex flex-col w-full h-full relative overflow-hidden">
-      <div className="flex justify-between items-start mb-6">
-        <h2 className="text-[#1A1A1A] text-[18px] sm:text-[20px] font-bold">Sales Overview</h2>
-        <button className="text-[#1A1A1A] hover:bg-gray-100 p-1.5 -mr-1.5 rounded-lg transition-colors flex items-center justify-center w-8 h-8">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>
-        </button>
-      </div>
-      
-      <div className="w-full flex flex-col justify-center items-center relative h-[160px] overflow-hidden mt-4">
-        <div className="w-[320px] h-[320px] absolute bottom-0 translate-y-[50%] left-1/2 -translate-x-1/2 pointer-events-none">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={Array.from({length: 12}).map(() => ({ value: 1 }))}
-                cx="50%"
-                cy="50%"
-                startAngle={180}
-                endAngle={0}
-                innerRadius={105}
-                outerRadius={150}
-                paddingAngle={4}
-                dataKey="value"
-                stroke="none"
-                cornerRadius={5}
-                isAnimationActive={true}
-              >
-                {Array.from({length: 12}).map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={GAUGE_COLORS[index]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="absolute bottom-1 flex flex-col items-center justify-center pointer-events-none">
-          <h3 className="text-[38px] sm:text-[42px] font-bold text-[#1A1A1A] tracking-tight leading-none mb-1">70.8%</h3>
-          <p className="text-[13px] font-medium text-[#71717A]">Sales Growth</p>
-        </div>
-      </div>
-      
-      <div className="mt-auto pt-10">
-         <span className="text-[14px] font-medium text-[#71717A] mb-1 block">Sales</span>
-         <div className="flex justify-between items-baseline mb-3">
-            <span className="text-[20px] font-bold text-[#1A1A1A] leading-none">$3,884.00</span>
-            <span className="text-[14px] font-medium text-[#71717A]">Target <span className="text-[#1A1A1A] font-bold">$20,000.00</span></span>
-         </div>
-         
-         {/* Progress Bar */}
-         <div className="w-full bg-[#F4F4F5] h-[8px] rounded-full overflow-hidden">
-           <div className="bg-[#2563EB] h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${(current / target) * 100}%` }}></div>
-         </div>
-      </div>
-    </div>
-  );
-}
+
 

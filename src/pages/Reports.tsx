@@ -1,7 +1,7 @@
 import { REVENUE_CHART_DATA } from "../data/mockData";
 import { Dollar01Icon, Tick01Icon, Activity01Icon, ArrowUp01Icon, ArrowDown01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcon } from "../components/HugeIcon";
-import { PerformanceOverviewChart, SalesOverviewGauge } from "../components/DashboardCharts";
+import { PerformanceOverviewChart } from "../components/DashboardCharts";
 import { cn } from "../lib/utils";
 
 export default function Reports() {
@@ -47,12 +47,9 @@ export default function Reports() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 flex-1">
-        <div className="lg:col-span-2 min-h-[400px]">
+      <div className="grid grid-cols-1 mb-6 flex-1">
+        <div className="w-full">
           <PerformanceOverviewChart />
-        </div>
-        <div className="min-h-[400px]">
-          <SalesOverviewGauge />
         </div>
       </div>
     </div>

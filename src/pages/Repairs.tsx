@@ -3,11 +3,19 @@ import { REPAIR_DATA } from "../data/mockData";
 import { Add01Icon, PencilEdit02Icon, MoreIcon } from "@hugeicons/core-free-icons";
 import { HugeIcon } from "../components/HugeIcon";
 import { cn } from "../lib/utils";
+import { CustomDropdown } from "../components/CustomDropdown";
+import { Clock, Activity } from "lucide-react";
 
 const TABS = ["All", "Pending", "In Progress", "Completed", "Collected"];
 
 export default function Repairs() {
   const [activeTab, setActiveTab] = useState("All");
+  const [jobStatus, setJobStatus] = useState<string>("Pending");
+
+  const STATUS_OPTIONS = [
+    { value: "Pending", label: "Pending", icon: <Clock size={16} />, iconColor: "text-amber-500", bgColor: "bg-amber-50", textColor: "text-amber-600" },
+    { value: "In Progress", label: "In Progress", icon: <Activity size={16} />, iconColor: "text-blue-500", bgColor: "bg-blue-50", textColor: "text-blue-600" },
+  ];
 
   const filteredRepairs = REPAIR_DATA.filter((repair) => 
     activeTab === "All" ? true : repair.status === activeTab
@@ -74,10 +82,11 @@ export default function Repairs() {
             
             <div className="flex flex-col gap-1.5">
               <label htmlFor="jobStatus" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Initial Status</label>
-              <select id="jobStatus" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] bg-white">
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-              </select>
+              <CustomDropdown 
+                options={STATUS_OPTIONS}
+                value={jobStatus}
+                onChange={setJobStatus}
+              />
             </div>
 
             <div className="flex items-end">

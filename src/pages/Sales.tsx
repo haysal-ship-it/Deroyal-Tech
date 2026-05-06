@@ -4,9 +4,28 @@ import { Add01Icon, ReceiptDollarIcon as Receipt01Icon, PencilEdit02Icon, MoreIc
 import { HugeIcon } from "../components/HugeIcon";
 import InvoiceModal from "../components/InvoiceModal";
 import { cn } from "../lib/utils";
+import { CustomDropdown } from "../components/CustomDropdown";
+import { Headphones, Smartphone, Laptop, Settings, TriangleAlert, Layers, Clock, Calendar, Wallet, Filter } from "lucide-react";
 
 export default function Sales() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [category, setCategory] = useState<string>("");
+  const [invoiceFilter, setInvoiceFilter] = useState<string>("outstanding");
+
+  const CATEGORY_OPTIONS = [
+    { value: "Accessories", label: "Accessories", icon: <Headphones size={16} /> },
+    { value: "Smartphones", label: "Smartphones", icon: <Smartphone size={16} /> },
+    { value: "Computers", label: "Computers", icon: <Laptop size={16} /> },
+    { value: "Parts", label: "Parts", icon: <Settings size={16} /> },
+  ];
+
+  const INVOICE_FILTER_OPTIONS = [
+    { value: "all", label: "All Invoices", icon: <Layers size={16} />, iconColor: "text-[#1A1A1A]", bgColor: "bg-gray-100", textColor: "text-[#1A1A1A]" },
+    { value: "outstanding", label: "Outstanding invoices", icon: <TriangleAlert size={16} />, iconColor: "text-[#F15F36]", bgColor: "bg-[#FFF4ED]", textColor: "text-[#F15F36]" },
+    { value: "overdue", label: "Overdue", icon: <Clock size={16} />, iconColor: "text-[#1A1A1A]", bgColor: "bg-gray-100", textColor: "text-[#1A1A1A]" },
+    { value: "scheduled", label: "Scheduled", icon: <Calendar size={16} />, iconColor: "text-[#1A1A1A]", bgColor: "bg-gray-100", textColor: "text-[#1A1A1A]" },
+    { value: "paid", label: "Paid", icon: <Wallet size={16} />, iconColor: "text-[#1A1A1A]", bgColor: "bg-gray-100", textColor: "text-[#1A1A1A]" },
+  ];
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full h-full">
@@ -41,13 +60,12 @@ export default function Sales() {
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="category" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Category</label>
-              <select id="category" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] bg-white">
-                <option value="">Select category...</option>
-                <option value="Accessories">Accessories</option>
-                <option value="Smartphones">Smartphones</option>
-                <option value="Computers">Computers</option>
-                <option value="Parts">Parts</option>
-              </select>
+              <CustomDropdown 
+                options={CATEGORY_OPTIONS}
+                value={category}
+                onChange={setCategory}
+                placeholder="Select category..."
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -87,9 +105,22 @@ export default function Sales() {
         </div>
 
         {/* Sales Table Box */}
-        <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm flex flex-col">
-          <div className="px-6 py-4 border-b border-[#E5E5E5] flex justify-between items-center">
-            <h2 className="text-sm font-semibold text-[#1A1A1A]">Sales History</h2>
+        <div className="bg-white rounded-[24px] border border-[#E5E5E5] shadow-sm flex flex-col">
+          <div className="px-6 py-4 border-b border-[#E5E5E5] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 className="text-[20px] font-bold text-[#1A1A1A]">Invoices</h2>
+            <div className="flex items-center gap-2">
+              <div className="w-[240px]">
+                <CustomDropdown 
+                  options={INVOICE_FILTER_OPTIONS}
+                  value={invoiceFilter}
+                  onChange={setInvoiceFilter}
+                  placeholder="Select filter..."
+                />
+              </div>
+              <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                 <Filter size={18} />
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left text-[13px] text-[#1A1A1A]">
