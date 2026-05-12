@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and permissions",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "sales"] },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "phone": { "type": "string" },
+        "bio": { "type": "string" },
+        "country": { "type": "string" },
+        "cityState": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "taxId": { "type": "string" },
+        "avatarUrl": { "type": "string" }
+      },
+      "required": ["name", "role", "email"]
+    },
+    "AppConfig": {
+      "title": "App Branding Config",
+      "description": "Global branding settings for the application",
+      "type": "object",
+      "properties": {
+        "sidebarLogoUrl": { "type": "string" },
+        "sidebarName": { "type": "string" },
+        "loginImageUrl": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data linked by auth UID"
+    },
+    "/settings/branding": {
+      "schema": "AppConfig",
+      "description": "Global branding configuration"
+    },
+    "/test/connection": {
+      "schema": { "type": "object", "properties": { "status": { "type": "string" } } },
+      "description": "Connection test document"
+    }
+  }
+}

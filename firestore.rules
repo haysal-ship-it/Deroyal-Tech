@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Validation
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'role', 'email']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.role in ['admin', 'sales'] &&
+             data.email is string && data.email.size() <= 100 &&
+             (!('uid' in data) || (data.uid is string && data.uid.size() <= 128)) &&
+             (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 1000)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
+             (!('firstName' in data) || (data.firstName is string && data.firstName.size() <= 100)) &&
+             (!('lastName' in data) || (data.lastName is string && data.lastName.size() <= 100)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
+             (!('country' in data) || (data.country is string && data.country.size() <= 100)) &&
+             (!('cityState' in data) || (data.cityState is string && data.cityState.size() <= 200)) &&
+             (!('postalCode' in data) || (data.postalCode is string && data.postalCode.size() <= 20)) &&
+             (!('taxId' in data) || (data.taxId is string && data.taxId.size() <= 50));
+    }
+
+    // Branding Validation
+    function isValidBranding(data) {
+      return (!('sidebarName' in data) || (data.sidebarName is string && data.sidebarName.size() <= 100)) &&
+             (!('sidebarLogoUrl' in data) || (data.sidebarLogoUrl is string && data.sidebarLogoUrl.size() <= 1000000)) &&
+             (!('loginImageUrl' in data) || (data.loginImageUrl is string && data.loginImageUrl.size() <= 1000000)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string || data.updatedAt is timestamp)) &&
+             (!('updatedBy' in data) || (data.updatedBy is string));
+    }
+
+    // Rules
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() && (docId != 'branding' || isValidBranding(incoming()));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      
+      allow update: if (isOwner(userId) || isAdmin()) && 
+                    isValidUser(incoming()) &&
+                    (isAdmin() || 
+                     request.auth.token.firebase.sign_in_provider == 'anonymous' || 
+                     (incoming().role == existing().role));
+    }
+
+    match /test/connection {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

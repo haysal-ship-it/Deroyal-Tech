@@ -1,116 +1,506 @@
-import { useState } from "react";
-import { HugeIcon } from "../components/HugeIcon";
-import { Settings01Icon, Add01Icon, CheckmarkCircle01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { useState, useRef, ChangeEvent } from "react";
+import { 
+  User, 
+  Lock, 
+  Users, 
+  Bell, 
+  CreditCard, 
+  Database, 
+  AlertTriangle,
+  Pencil,
+  ImagePlus,
+  Save,
+  RotateCcw,
+  CheckCircle2,
+  XCircle,
+  Loader2
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
+import { cn } from "../lib/utils";
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState("staff");
+  const { user, updateUser } = useAuth();
+  const { config, updateConfig, resetToDefault } = useConfig();
+  const [activeTab, setActiveTab] = useState("profile");
   
+  // State for form edits
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditingInfo, setIsEditingInfo] = useState(false);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [isEditingBranding, setIsEditingBranding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
+  // Local state for forms to avoid instant updates to context
+  const [profileForm, setProfileForm] = useState(user || {});
+  const [brandingForm, setBrandingForm] = useState(config);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const loginBgInputRef = useRef<HTMLInputElement>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      await updateUser(profileForm);
+      setIsEditingProfile(false);
+      setIsEditingInfo(false);
+      setIsEditingAddress(false);
+      showToast('success', 'Profile updated successfully');
+    } catch (error) {
+      showToast('error', 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveBranding = async () => {
+    setIsSaving(true);
+    try {
+      await updateConfig(brandingForm);
+      setIsEditingBranding(false);
+      showToast('success', 'Branding updated successfully');
+    } catch (error) {
+      showToast('error', 'Failed to update branding');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleResetBranding = async () => {
+    if (confirm("Are you sure you want to reset branding to defaults?")) {
+      setIsSaving(true);
+      try {
+        await resetToDefault();
+        setBrandingForm(config); // Update local form too
+        showToast('success', 'Branding reset to default');
+      } catch (error) {
+        showToast('error', 'Failed to reset branding');
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>, field: 'sidebarLogoUrl' | 'loginImageUrl') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for base64 in Firestore
+        showToast('error', 'File too large. Max size 1MB for direct upload.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBrandingForm(prev => ({ ...prev, [field]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const TABS = [
+    { id: "profile", label: "My Profile", icon: User },
+    ...(user?.role === 'admin' ? [{ id: "branding", label: "App Branding", icon: ImagePlus }] : []),
+    { id: "security", label: "Password & Security", icon: Lock },
+    { id: "teams", label: "Teams", icon: Users },
+    { id: "team-member", label: "Team Member", icon: Users },
+    { id: "notifications", label: "Notifications", icon: Bell },
+    { id: "billing", label: "Billing", icon: CreditCard },
+    { id: "data-export", label: "Data Export", icon: Database },
+    { id: "delete", label: "Delete Account", icon: AlertTriangle, className: "text-[#EF4444]" },
+  ];
+
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-7xl mx-auto w-full relative">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={cn(
+          "fixed top-8 right-8 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-xl border animate-in slide-in-from-right-10 fade-in duration-300",
+          toast.type === 'success' ? "bg-white border-green-100 text-green-700" : "bg-white border-red-100 text-red-700"
+        )}>
+          {toast.type === 'success' ? <CheckCircle2 size={20} className="text-green-500" /> : <XCircle size={20} className="text-red-500" />}
+          <span className="text-sm font-semibold">{toast.message}</span>
+        </div>
+      )}
+
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Settings</h1>
-        <p className="text-[#71717A] mt-1 text-sm">Manage your team, permissions, and dashboard preferences.</p>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Account Settings</h1>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-64 flex-shrink-0">
-          <nav className="flex flex-col space-y-1">
-            <button
-              onClick={() => setActiveTab("staff")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-all duration-200 ${
-                activeTab === "staff"
-                  ? "bg-white text-[#1A1A1A] shadow-sm border border-[#E5E5E5]"
-                  : "text-[#71717A] hover:bg-white hover:text-[#1A1A1A] border border-transparent"
-              }`}
-            >
-              Staff & Permissions
-            </button>
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-all duration-200 ${
-                activeTab === "dashboard"
-                  ? "bg-white text-[#1A1A1A] shadow-sm border border-[#E5E5E5]"
-                  : "text-[#71717A] hover:bg-white hover:text-[#1A1A1A] border border-transparent"
-              }`}
-            >
-              Dashboard View
-            </button>
+      <div className="flex flex-col lg:flex-row gap-8 bg-white rounded-[24px] border border-[#E5E5E5] shadow-sm overflow-hidden p-6 lg:p-8">
+        {/* Left Sidebar */}
+        <div className="w-full lg:w-64 flex-shrink-0 lg:border-r border-[#E5E5E5] lg:pr-8">
+          <nav className="flex flex-col space-y-1 text-left">
+            {TABS.map((tab) => {
+              const TabIcon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-all duration-200",
+                    activeTab === tab.id
+                      ? "bg-[#EAF2FF] text-[#1A1A1A] shadow-sm"
+                      : cn("text-[#71717A] hover:bg-gray-50", tab.className)
+                  )}
+                >
+                  <TabIcon size={18} />
+                  {tab.label}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        <div className="flex-1">
-          {activeTab === "staff" && (
-            <div className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-[#E5E5E5] flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-[#1A1A1A]">Sales Staff</h2>
-                  <p className="text-sm text-[#71717A] mt-1">Manage user accounts and their roles.</p>
+        {/* Right Content */}
+        <div className="flex-1 lg:pl-8 overflow-y-auto max-h-[80vh]">
+          {activeTab === "profile" && (
+            <div className="space-y-8">
+              <h2 className="text-xl font-bold text-[#1A1A1A] mb-6">My Profile</h2>
+              
+              {/* Profile Card */}
+              <div className="p-6 rounded-[24px] border border-[#E5E5E5] bg-white relative group hover:border-gray-300 transition-all">
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <img 
+                      src={profileForm.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=256&auto=format&fit=crop'} 
+                      alt="Avatar" 
+                      className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm" 
+                    />
+                    {isEditingProfile && (
+                       <button className="absolute bottom-0 right-0 p-1.5 bg-[#1A1A1A] text-white rounded-full shadow-lg">
+                          <ImagePlus size={14} />
+                       </button>
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-lg font-bold text-[#1A1A1A]">{user?.name}</h3>
+                    <p className="text-[#71717A] text-sm">{user?.bio || 'No bio added'}</p>
+                    <p className="text-[#71717A] text-xs mt-1">{user?.cityState || 'No address added'}</p>
+                  </div>
+                  <button 
+                    disabled={isSaving}
+                    onClick={() => isEditingProfile ? handleSaveProfile() : setIsEditingProfile(true)}
+                    className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#EAF2FF] text-[#1A1A1A] hover:bg-[#D9E6FF] transition-all disabled:opacity-50"
+                  >
+                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isEditingProfile ? <Save size={16} /> : <Pencil size={16} />)}
+                    {isEditingProfile ? "Save" : "Edit"}
+                  </button>
                 </div>
-                <button className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-black transition-colors">
-                   {/* Using Settings01Icon temporarily, need a Plus icon or Add Team */}
-                  Add New Staff
-                </button>
+                {isEditingProfile && (
+                  <div className="mt-6 pt-6 border-t border-[#E5E5E5] grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                     <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-[#71717A]">Avatar URL</label>
+                        <input 
+                          type="text" 
+                          value={profileForm.avatarUrl || ''} 
+                          onChange={(e) => setProfileForm({...profileForm, avatarUrl: e.target.value})}
+                          className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                        />
+                     </div>
+                  </div>
+                )}
               </div>
-              <div className="p-0">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-[11px] font-semibold text-[#A1A1AA] uppercase tracking-wider bg-[#FAFAFA] border-b border-[#E5E5E5]">
-                    <tr>
-                      <th className="px-6 py-4">Name</th>
-                      <th className="px-6 py-4">Email</th>
-                      <th className="px-6 py-4">Role</th>
-                      <th className="px-6 py-4">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E5E5E5]">
-                    <tr className="hover:bg-[#FAFAFA] transition-colors group">
-                      <td className="px-6 py-4 font-medium text-[#1A1A1A]">Admin User</td>
-                      <td className="px-6 py-4 text-[#71717A]">admin@admin.com</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-[#FFF9EA] text-[#D97706]">
-                          Admin
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 text-[#10B981] text-xs font-medium">
-                          Active
-                        </span>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-[#FAFAFA] transition-colors group">
-                      <td className="px-6 py-4 font-medium text-[#1A1A1A]">Staff User</td>
-                      <td className="px-6 py-4 text-[#71717A]">staff@staff.com</td>
-                      <td className="px-6 py-4">
-                         <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-[#F5F5F5] text-[#71717A]">
-                          Staff
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 text-[#10B981] text-xs font-medium">
-                          Active
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+
+              {/* Personal Information */}
+              <div className="p-6 rounded-[24px] border border-[#E5E5E5] bg-white relative group hover:border-gray-300 transition-all text-left">
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-8">Personal Information</h3>
+                <button 
+                   disabled={isSaving}
+                  onClick={() => isEditingInfo ? handleSaveProfile() : setIsEditingInfo(true)}
+                  className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#EAF2FF] text-[#1A1A1A] hover:bg-[#D9E6FF] transition-all disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isEditingInfo ? <Save size={16} /> : <Pencil size={16} />)}
+                  {isEditingInfo ? "Save" : "Edit"}
+                </button>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">First Name</label>
+                    {isEditingInfo ? (
+                      <input 
+                        type="text" 
+                        value={profileForm.firstName || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, firstName: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.firstName || '—'}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Last Name</label>
+                   {isEditingInfo ? (
+                      <input 
+                        type="text" 
+                        value={profileForm.lastName || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, lastName: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.lastName || '—'}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Email Address</label>
+                   {isEditingInfo ? (
+                      <input 
+                        type="email" 
+                        value={profileForm.email || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.email}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Phone</label>
+                   {isEditingInfo ? (
+                      <input 
+                        type="text" 
+                        value={profileForm.phone || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.phone || '—'}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Bio</label>
+                   {isEditingInfo ? (
+                      <textarea 
+                        value={profileForm.bio || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, bio: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF] min-h-[80px]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.bio || '—'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Address Section */}
+              <div className="p-6 rounded-[24px] border border-[#E5E5E5] bg-white relative group hover:border-gray-300 transition-all text-left">
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-8">Address</h3>
+                <button 
+                   disabled={isSaving}
+                  onClick={() => isEditingAddress ? handleSaveProfile() : setIsEditingAddress(true)}
+                  className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#EAF2FF] text-[#1A1A1A] hover:bg-[#D9E6FF] transition-all disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isEditingAddress ? <Save size={16} /> : <Pencil size={16} />)}
+                  {isEditingAddress ? "Save" : "Edit"}
+                </button>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Country</label>
+                    {isEditingAddress ? (
+                      <input 
+                        type="text" 
+                        value={profileForm.country || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, country: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.country || '—'}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">City/State</label>
+                   {isEditingAddress ? (
+                      <input 
+                        type="text" 
+                        value={profileForm.cityState || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, cityState: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.cityState || '—'}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Postal Code</label>
+                   {isEditingAddress ? (
+                      <input 
+                        type="text" 
+                        value={profileForm.postalCode || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, postalCode: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.postalCode || '—'}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Tax ID</label>
+                   {isEditingAddress ? (
+                      <input 
+                        type="text" 
+                        value={profileForm.taxId || ''} 
+                        onChange={(e) => setProfileForm({...profileForm, taxId: e.target.value})}
+                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.taxId || '—'}</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {activeTab === "dashboard" && (
-            <div className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm overflow-hidden p-6">
-              <h2 className="text-lg font-bold text-[#1A1A1A]">Customize Dashboard</h2>
-              <p className="text-sm text-[#71717A] mt-1 mb-6">Select which widgets are visible on the main dashboard.</p>
-              
-              <div className="space-y-4">
-                {['Total Revenue', 'Open Repairs', 'Completed Jobs', 'New Sales', 'Sales Analytics Chart', 'Recent Transactions'].map((widget, i) => (
-                   <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-[#E5E5E5]">
-                    <div className="font-medium text-[#1A1A1A]">{widget}</div>
-                    <div className="w-10 h-5 bg-[#10B981] rounded-full flex items-center p-0.5 justify-end cursor-pointer">
-                      <div className="w-4 h-4 bg-white rounded-full shadow-sm"></div>
-                    </div>
-                  </div>
-                ))}
+          {activeTab === "branding" && user?.role === 'admin' && (
+            <div className="space-y-8 text-left">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-[#1A1A1A]">App Branding</h2>
+                <button 
+                  onClick={handleResetBranding}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-[#71717A] hover:bg-gray-100 transition-all border border-[#E5E5E5]"
+                >
+                  <RotateCcw size={14} />
+                  Reset to Default
+                </button>
               </div>
+              
+              <div className="p-6 rounded-[24px] border border-[#E5E5E5] bg-white relative group hover:border-gray-300 transition-all">
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-8">Sidebar & Identity</h3>
+                <button 
+                  disabled={isSaving}
+                  onClick={() => isEditingBranding ? handleSaveBranding() : setIsEditingBranding(true)}
+                  className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#EAF2FF] text-[#1A1A1A] hover:bg-[#D9E6FF] transition-all disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isEditingBranding ? <Save size={16} /> : <Pencil size={16} />)}
+                  {isEditingBranding ? "Save" : "Edit"}
+                </button>
+                
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Company Name</label>
+                    {isEditingBranding ? (
+                      <input 
+                        type="text" 
+                        value={brandingForm.sidebarName} 
+                        onChange={(e) => setBrandingForm({...brandingForm, sidebarName: e.target.value})}
+                        className="px-4 py-3 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF] w-full max-w-md"
+                      />
+                    ) : (
+                      <p className="text-[16px] font-bold text-[#1A1A1A]">{config.sidebarName}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Logo Image</label>
+                    {isEditingBranding ? (
+                      <div className="flex flex-col gap-4">
+                        <input 
+                          type="text" 
+                          value={brandingForm.sidebarLogoUrl} 
+                          onChange={(e) => setBrandingForm({...brandingForm, sidebarLogoUrl: e.target.value})}
+                          className="px-4 py-3 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF] w-full"
+                          placeholder="Paste image URL here"
+                        />
+                        <div className="flex items-center gap-4">
+                          <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(e, 'sidebarLogoUrl')}
+                          />
+                          <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-50 border border-[#E5E5E5] text-sm font-semibold hover:bg-gray-100 transition-all"
+                          >
+                            <ImagePlus size={18} />
+                            Upload Logo
+                          </button>
+                          <span className="text-xs text-[#A1A1AA]">Supports JPG, PNG, SVG (Max 1MB)</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        {config.sidebarLogoUrl ? (
+                          <img src={config.sidebarLogoUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover border border-gray-100" />
+                        ) : (
+                          <div className="w-12 h-12 bg-[#F6A723] rounded-xl flex items-center justify-center">
+                            <div className="w-6 h-6 border-2 border-white rounded-sm"></div>
+                          </div>
+                        )}
+                        <span className="text-sm text-[#71717A] italic">Current Active Logo</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-[24px] border border-[#E5E5E5] bg-white relative group hover:border-gray-300 transition-all">
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-8">Login Screen</h3>
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Main Hero Background</label>
+                    {isEditingBranding ? (
+                      <div className="flex flex-col gap-4">
+                        <input 
+                          type="text" 
+                          value={brandingForm.loginImageUrl} 
+                          onChange={(e) => setBrandingForm({...brandingForm, loginImageUrl: e.target.value})}
+                          className="px-4 py-3 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF] w-full"
+                          placeholder="Paste background URL here"
+                        />
+                        <div className="flex items-center gap-4">
+                          <input 
+                            type="file" 
+                            ref={loginBgInputRef}
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(e, 'loginImageUrl')}
+                          />
+                          <button 
+                            onClick={() => loginBgInputRef.current?.click()}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-50 border border-[#E5E5E5] text-sm font-semibold hover:bg-gray-100 transition-all"
+                          >
+                            <ImagePlus size={18} />
+                            Upload Hero Image
+                          </button>
+                           <span className="text-xs text-[#A1A1AA]">Supports JPG, PNG, WEBP (Max 1MB)</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-gray-100 group-hover:shadow-md transition-all">
+                        <img 
+                          src={config.loginImageUrl} 
+                          alt="Login Background" 
+                          className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                           <span className="text-white text-xs font-bold uppercase tracking-widest bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">Preview</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Placeholder for other tabs */}
+          {!["profile", "branding"].includes(activeTab) && (
+            <div className="flex flex-col items-center justify-center p-12 text-center h-full">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-300 border border-gray-100 shadow-inner">
+                 {(() => {
+                   const TabIcon = TABS.find(t => t.id === activeTab)?.icon || AlertTriangle;
+                   return <TabIcon size={32} />;
+                 })()}
+              </div>
+              <h2 className="text-lg font-bold text-[#1A1A1A]">Section: {TABS.find(t => t.id === activeTab)?.label}</h2>
+              <p className="text-sm text-[#71717A] mt-2">This section is currently under development.</p>
             </div>
           )}
         </div>

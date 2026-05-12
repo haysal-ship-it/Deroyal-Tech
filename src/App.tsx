@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ConfigProvider } from "./context/ConfigContext";
 
 function RootRedirect() {
   const { user } = useAuth();
@@ -19,26 +20,28 @@ function RootRedirect() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<RootRedirect />} />
-              <Route path="sales" element={<Sales />} />
-              <Route path="repairs" element={<Repairs />} />
-              
-              {/* Admin only routes */}
-              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                <Route path="reports" element={<Reports />} />
-                <Route path="settings" element={<Settings />} />
+    <ConfigProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<RootRedirect />} />
+                <Route path="sales" element={<Sales />} />
+                <Route path="repairs" element={<Repairs />} />
+                
+                {/* Admin only routes */}
+                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="settings" element={<Settings />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ConfigProvider>
   );
 }

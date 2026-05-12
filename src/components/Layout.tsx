@@ -3,11 +3,13 @@ import { Layout01Icon, ShoppingCart01Icon, Wrench01Icon, BarChartIcon, Notificat
 import { HugeIcon } from "./HugeIcon";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { config } = useConfig();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Close sidebar when window is resized to larger breakpoint
@@ -33,7 +35,6 @@ export default function Layout() {
 
   const OTHERS = [
     ...(user?.role === 'admin' ? [{ label: "Settings", path: "/settings", icon: Settings01Icon }] : []),
-    { label: "Help Center", path: "/help", icon: HelpCircleIcon },
   ];
 
   return (
@@ -54,10 +55,14 @@ export default function Layout() {
       )}>
         <div className="h-20 flex px-6 items-center border-b border-[#E5E5E5] gap-3 justify-between">
           <div className="flex flex-row items-center gap-3">
-            <div className="w-8 h-8 bg-[#F6A723] rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
-            </div>
-            <h1 className="text-xl font-bold tracking-tight text-[#1A1A1A]">RepairTech</h1>
+            {config.sidebarLogoUrl ? (
+              <img src={config.sidebarLogoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
+            ) : (
+              <div className="w-8 h-8 bg-[#F6A723] rounded-lg flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
+              </div>
+            )}
+            <h1 className="text-xl font-bold tracking-tight text-[#1A1A1A]">{config.sidebarName}</h1>
           </div>
           <button 
             className="lg:hidden p-2 -mr-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
@@ -160,9 +165,13 @@ export default function Layout() {
         <div className="p-6 border-t border-[#E5E5E5]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-xs font-bold text-[#1A1A1A]">
-                {user?.name.split(' ').map(n => n[0]).join('')}
-              </div>
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-xs font-bold text-[#1A1A1A]">
+                  {user?.name.split(' ').map(n => n[0]).join('')}
+                </div>
+              )}
               <div>
                 <div className="text-[14px] font-semibold text-[#1A1A1A] leading-tight">{user?.name}</div>
                 <div className="text-[12px] text-[#71717A] capitalize mt-0.5">{user?.role} {user?.role === 'admin' ? 'Manager' : 'Staff'}</div>
@@ -210,8 +219,12 @@ export default function Layout() {
               <HugeIcon icon={Notification01Icon} className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-[#F97D7D] rounded-full border border-gray-100"></span>
             </button>
-            <div className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full bg-[#E5E5E5] text-xs font-bold">
-              {user?.name.split(' ').map(n => n[0]).join('')}
+            <div className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full bg-[#E5E5E5] text-xs font-bold overflow-hidden border border-gray-100 shadow-sm">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                user?.name.split(' ').map(n => n[0]).join('')
+              )}
             </div>
           </div>
         </header>

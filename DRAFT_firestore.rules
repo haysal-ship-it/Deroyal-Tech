@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Validation
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'role', 'email']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.role in ['admin', 'sales'] &&
+             data.email is string && data.email.size() <= 100 &&
+             (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 1000)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 500));
+    }
+
+    // Branding Validation
+    function isValidBranding(data) {
+      return (!('sidebarName' in data) || (data.sidebarName is string && data.sidebarName.size() <= 100)) &&
+             (!('sidebarLogoUrl' in data) || (data.sidebarLogoUrl is string && data.sidebarLogoUrl.size() <= 1000)) &&
+             (!('loginImageUrl' in data) || (data.loginImageUrl is string && data.loginImageUrl.size() <= 1000));
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().role == 'sales'; // Only self-register as sales
+      
+      allow update: if (isOwner(userId) || isAdmin()) && 
+                    isValidUser(incoming()) &&
+                    (isAdmin() || (incoming().role == existing().role)); // Only admin can change roles
+    }
+
+    match /settings/branding {
+      allow read: if true; // Publicly readable for login screen
+      allow write: if isAdmin() && isValidBranding(incoming());
+    }
+
+    match /test/connection {
+      allow read, write: if isSignedIn();
+    }
+  }
+}

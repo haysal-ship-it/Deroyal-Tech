@@ -1,35 +1,120 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { 
+  signInAnonymously,
+  onAuthStateChanged, 
+  signOut,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 
 type Role = 'admin' | 'sales';
 
 interface User {
+  uid: string;
   name: string;
   role: Role;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  bio: string;
+  country: string;
+  cityState: string;
+  postalCode: string;
+  taxId: string;
+  avatarUrl: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (role: Role) => void;
-  logout: () => void;
+  loading: boolean;
+  login: (role: Role) => Promise<void>;
+  logout: () => Promise<void>;
+  updateUser: (newData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (role: Role) => {
-    if (role === 'admin') {
-      setUser({ name: 'Julian D.', role: 'admin' });
-    } else {
-      setUser({ name: 'Sarah S.', role: 'sales' });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            setUser(userDoc.data() as User);
+          }
+        } catch (error) {
+          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const login = async (role: Role) => {
+    try {
+      setLoading(true);
+      // Use Anonymous Auth to get a session for Firestore rules
+      const { user: firebaseUser } = await signInAnonymously(auth);
+      const userPath = `users/${firebaseUser.uid}`;
+      
+      const userData: User = {
+        uid: firebaseUser.uid,
+        name: role === 'admin' ? 'Austin Martin' : 'Sarah Simpson',
+        role: role,
+        email: role === 'admin' ? 'austin@repairtech.com' : 'sarah@repairtech.com',
+        firstName: role === 'admin' ? 'Austin' : 'Sarah',
+        lastName: role === 'admin' ? 'Martin' : 'Simpson',
+        phone: role === 'admin' ? '+09-345-346-46' : '+09-123-456-78',
+        bio: role === 'admin' ? 'UI/UX Designer' : 'Sales Specialist',
+        country: 'United Kingdom',
+        cityState: role === 'admin' ? 'Leeds, East London' : 'London',
+        postalCode: role === 'admin' ? 'ERT 2354' : 'W1A 1AA',
+        taxId: role === 'admin' ? 'AS4645756' : 'TX123456',
+        avatarUrl: role === 'admin' 
+          ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=2576&auto=format&fit=crop'
+          : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2574&auto=format&fit=crop'
+      };
+
+      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+      setUser(userData);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser?.uid || 'unknown'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const logout = () => setUser(null);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
+  const updateUser = async (newData: Partial<User>) => {
+    if (!user) return;
+    const userPath = `users/${user.uid}`;
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, { ...user, ...newData }, { merge: true });
+      setUser(prev => prev ? { ...prev, ...newData } : null);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, userPath);
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
