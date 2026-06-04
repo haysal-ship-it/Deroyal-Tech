@@ -35,15 +35,11 @@ service cloud.firestore {
              data.role in ['admin', 'sales'] &&
              data.email is string && data.email.size() <= 100 &&
              (!('uid' in data) || (data.uid is string && data.uid.size() <= 128)) &&
-             (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 1000)) &&
+             (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 1000000)) &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
              (!('firstName' in data) || (data.firstName is string && data.firstName.size() <= 100)) &&
              (!('lastName' in data) || (data.lastName is string && data.lastName.size() <= 100)) &&
-             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
-             (!('country' in data) || (data.country is string && data.country.size() <= 100)) &&
-             (!('cityState' in data) || (data.cityState is string && data.cityState.size() <= 200)) &&
-             (!('postalCode' in data) || (data.postalCode is string && data.postalCode.size() <= 20)) &&
-             (!('taxId' in data) || (data.taxId is string && data.taxId.size() <= 50));
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50));
     }
 
     // Branding Validation

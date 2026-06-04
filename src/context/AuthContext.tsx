@@ -18,10 +18,6 @@ interface User {
   lastName: string;
   phone: string;
   bio: string;
-  country: string;
-  cityState: string;
-  postalCode: string;
-  taxId: string;
   avatarUrl: string;
 }
 
@@ -75,10 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastName: role === 'admin' ? 'Martin' : 'Simpson',
         phone: role === 'admin' ? '+09-345-346-46' : '+09-123-456-78',
         bio: role === 'admin' ? 'UI/UX Designer' : 'Sales Specialist',
-        country: 'United Kingdom',
-        cityState: role === 'admin' ? 'Leeds, East London' : 'London',
-        postalCode: role === 'admin' ? 'ERT 2354' : 'W1A 1AA',
-        taxId: role === 'admin' ? 'AS4645756' : 'TX123456',
         avatarUrl: role === 'admin' 
           ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=2576&auto=format&fit=crop'
           : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2574&auto=format&fit=crop'
@@ -104,10 +96,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateUser = async (newData: Partial<User>) => {
     if (!user) return;
     const userPath = `users/${user.uid}`;
+    
+    // Auto-update full name if first or last name changes
+    const updatedData = { ...newData };
+    if (updatedData.firstName !== undefined || updatedData.lastName !== undefined) {
+      const newFirstName = updatedData.firstName ?? user.firstName ?? '';
+      const newLastName = updatedData.lastName ?? user.lastName ?? '';
+      updatedData.name = `${newFirstName} ${newLastName}`.trim();
+    }
+
     try {
       const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, { ...user, ...newData }, { merge: true });
-      setUser(prev => prev ? { ...prev, ...newData } : null);
+      await setDoc(userRef, { ...user, ...updatedData }, { merge: true });
+      setUser(prev => prev ? { ...prev, ...updatedData } : null);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, userPath);
     }

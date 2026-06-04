@@ -37,6 +37,21 @@ export default function Layout() {
     ...(user?.role === 'admin' ? [{ label: "Settings", path: "/settings", icon: Settings01Icon }] : []),
   ];
 
+  const getFormattedName = () => {
+    if (!user) return '';
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName.charAt(0)}.`;
+    }
+    if (user.name) {
+      const parts = user.name.trim().split(' ');
+      if (parts.length > 1) {
+        return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+      }
+      return user.name;
+    }
+    return '';
+  };
+
   return (
     <div className="flex bg-[#F5F7FA] min-h-screen text-[#1A1A1A] font-sans relative">
       
@@ -173,7 +188,7 @@ export default function Layout() {
                 </div>
               )}
               <div>
-                <div className="text-[14px] font-semibold text-[#1A1A1A] leading-tight">{user?.name}</div>
+                <div className="text-[14px] font-semibold text-[#1A1A1A] leading-tight">{getFormattedName()}</div>
                 <div className="text-[12px] text-[#71717A] capitalize mt-0.5">{user?.role} {user?.role === 'admin' ? 'Manager' : 'Staff'}</div>
               </div>
             </div>
@@ -219,13 +234,6 @@ export default function Layout() {
               <HugeIcon icon={Notification01Icon} className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-[#F97D7D] rounded-full border border-gray-100"></span>
             </button>
-            <div className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full bg-[#E5E5E5] text-xs font-bold overflow-hidden border border-gray-100 shadow-sm">
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                user?.name.split(' ').map(n => n[0]).join('')
-              )}
-            </div>
           </div>
         </header>
 

@@ -27,7 +27,6 @@ export default function Settings() {
   // State for form edits
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingInfo, setIsEditingInfo] = useState(false);
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [isEditingBranding, setIsEditingBranding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{type: 'success' | 'error', message: string} | null>(null);
@@ -50,7 +49,6 @@ export default function Settings() {
       await updateUser(profileForm);
       setIsEditingProfile(false);
       setIsEditingInfo(false);
-      setIsEditingAddress(false);
       showToast('success', 'Profile updated successfully');
     } catch (error) {
       showToast('error', 'Failed to update profile');
@@ -172,15 +170,55 @@ export default function Settings() {
                       className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm" 
                     />
                     {isEditingProfile && (
-                       <button className="absolute bottom-0 right-0 p-1.5 bg-[#1A1A1A] text-white rounded-full shadow-lg">
+                       <label className="absolute bottom-0 right-0 p-1.5 bg-[#1A1A1A] text-white rounded-full shadow-lg cursor-pointer hover:bg-black transition-colors">
                           <ImagePlus size={14} />
-                       </button>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  const img = new Image();
+                                  img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    const MAX_WIDTH = 400;
+                                    const MAX_HEIGHT = 400;
+                                    let width = img.width;
+                                    let height = img.height;
+
+                                    if (width > height) {
+                                      if (width > MAX_WIDTH) {
+                                        height *= MAX_WIDTH / width;
+                                        width = MAX_WIDTH;
+                                      }
+                                    } else {
+                                      if (height > MAX_HEIGHT) {
+                                        width *= MAX_HEIGHT / height;
+                                        height = MAX_HEIGHT;
+                                      }
+                                    }
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx?.drawImage(img, 0, 0, width, height);
+                                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                                    setProfileForm({ ...profileForm, avatarUrl: compressedDataUrl });
+                                  };
+                                  img.src = reader.result as string;
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                       </label>
                     )}
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg font-bold text-[#1A1A1A]">{user?.name}</h3>
                     <p className="text-[#71717A] text-sm">{user?.bio || 'No bio added'}</p>
-                    <p className="text-[#71717A] text-xs mt-1">{user?.cityState || 'No address added'}</p>
                   </div>
                   <button 
                     disabled={isSaving}
@@ -191,19 +229,6 @@ export default function Settings() {
                     {isEditingProfile ? "Save" : "Edit"}
                   </button>
                 </div>
-                {isEditingProfile && (
-                  <div className="mt-6 pt-6 border-t border-[#E5E5E5] grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                     <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-medium text-[#71717A]">Avatar URL</label>
-                        <input 
-                          type="text" 
-                          value={profileForm.avatarUrl || ''} 
-                          onChange={(e) => setProfileForm({...profileForm, avatarUrl: e.target.value})}
-                          className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
-                        />
-                     </div>
-                  </div>
-                )}
               </div>
 
               {/* Personal Information */}
@@ -286,73 +311,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Address Section */}
-              <div className="p-6 rounded-[24px] border border-[#E5E5E5] bg-white relative group hover:border-gray-300 transition-all text-left">
-                <h3 className="text-lg font-bold text-[#1A1A1A] mb-8">Address</h3>
-                <button 
-                   disabled={isSaving}
-                  onClick={() => isEditingAddress ? handleSaveProfile() : setIsEditingAddress(true)}
-                  className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#EAF2FF] text-[#1A1A1A] hover:bg-[#D9E6FF] transition-all disabled:opacity-50"
-                >
-                  {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isEditingAddress ? <Save size={16} /> : <Pencil size={16} />)}
-                  {isEditingAddress ? "Save" : "Edit"}
-                </button>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Country</label>
-                    {isEditingAddress ? (
-                      <input 
-                        type="text" 
-                        value={profileForm.country || ''} 
-                        onChange={(e) => setProfileForm({...profileForm, country: e.target.value})}
-                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
-                      />
-                    ) : (
-                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.country || '—'}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">City/State</label>
-                   {isEditingAddress ? (
-                      <input 
-                        type="text" 
-                        value={profileForm.cityState || ''} 
-                        onChange={(e) => setProfileForm({...profileForm, cityState: e.target.value})}
-                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
-                      />
-                    ) : (
-                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.cityState || '—'}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Postal Code</label>
-                   {isEditingAddress ? (
-                      <input 
-                        type="text" 
-                        value={profileForm.postalCode || ''} 
-                        onChange={(e) => setProfileForm({...profileForm, postalCode: e.target.value})}
-                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
-                      />
-                    ) : (
-                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.postalCode || '—'}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">Tax ID</label>
-                   {isEditingAddress ? (
-                      <input 
-                        type="text" 
-                        value={profileForm.taxId || ''} 
-                        onChange={(e) => setProfileForm({...profileForm, taxId: e.target.value})}
-                        className="px-4 py-2 rounded-xl border border-[#E5E5E5] text-sm focus:outline-none focus:ring-2 focus:ring-[#EAF2FF]"
-                      />
-                    ) : (
-                      <p className="text-[14px] font-semibold text-[#1A1A1A]">{user?.taxId || '—'}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              {/* Removed Address Section */}
             </div>
           )}
 
