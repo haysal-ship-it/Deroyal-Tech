@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Layout01Icon, ShoppingCart01Icon, Wrench01Icon, BarChartIcon, Notification01Icon, AiSearch02Icon, Logout01Icon, Settings01Icon, HelpCircleIcon, Moon02Icon } from "@hugeicons/core-free-icons";
+import { Layout01Icon, ShoppingCart01Icon, Wrench01Icon, Notification01Icon, AiSearch02Icon, Logout01Icon, Settings01Icon, HelpCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeIcon } from "./HugeIcon";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
@@ -24,17 +24,13 @@ export default function Layout() {
   }, []);
 
   const MAIN_MENU = [
-    ...(user?.role === 'admin' ? [{ label: "Dashboard", path: "/", icon: Layout01Icon }] : []),
-    { label: "Sales", path: "/sales", icon: ShoppingCart01Icon },
-    { label: "Repairs", path: "/repairs", icon: Wrench01Icon },
-  ];
-
-  const TOOLS = [
-    ...(user?.role === 'admin' ? [{ label: "Reports", path: "/reports", icon: BarChartIcon }] : []),
+    ...(user?.permissions?.Dashboard !== 'None' ? [{ label: "Dashboard", path: "/", icon: Layout01Icon }] : []),
+    ...(user?.permissions?.Sales !== 'None' ? [{ label: "Sales", path: "/sales", icon: ShoppingCart01Icon }] : []),
+    ...(user?.permissions?.Repair !== 'None' ? [{ label: "Repairs", path: "/repairs", icon: Wrench01Icon }] : []),
   ];
 
   const OTHERS = [
-    ...(user?.role === 'admin' ? [{ label: "Settings", path: "/settings", icon: Settings01Icon }] : []),
+    ...(user?.permissions?.Settings === 'Full' ? [{ label: "Settings", path: "/settings", icon: Settings01Icon }] : []),
   ];
 
   const getFormattedName = () => {
@@ -53,22 +49,22 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex bg-[#F5F7FA] min-h-screen text-[#1A1A1A] font-sans relative">
+    <div className="fixed inset-0 flex bg-[#F9FAFB] w-full overflow-hidden text-gray-900 font-sans">
       
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-[260px] bg-white border-r border-[#E5E5E5] flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-[260px] bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="h-20 flex px-6 items-center border-b border-[#E5E5E5] gap-3 justify-between">
+        <div className="h-20 flex px-6 items-center border-b border-gray-200 gap-3 justify-between">
           <div className="flex flex-row items-center gap-3">
             {config.sidebarLogoUrl ? (
               <img src={config.sidebarLogoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
@@ -77,7 +73,7 @@ export default function Layout() {
                 <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
               </div>
             )}
-            <h1 className="text-xl font-bold tracking-tight text-[#1A1A1A]">{config.sidebarName}</h1>
+            <h1 className="text-xl font-display font-bold tracking-tight text-gray-900">{config.sidebarName}</h1>
           </div>
           <button 
             className="lg:hidden p-2 -mr-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
@@ -90,7 +86,7 @@ export default function Layout() {
         <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-8">
           {/* Main Menu */}
           <div>
-            <p className="text-[11px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3 px-4">Main Menu</p>
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3 px-4">Main Menu</p>
             <div className="space-y-1">
               {MAIN_MENU.map((item) => (
                 <NavLink
@@ -101,8 +97,8 @@ export default function Layout() {
                     cn(
                       "flex items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-medium transition-all duration-200",
                       isActive
-                        ? "bg-[#FFF9EA] text-[#D97706] shadow-sm ring-1 ring-[#FDE6B0]"
-                        : "text-[#71717A] hover:bg-[#F5F7FA] hover:text-[#1A1A1A]"
+                        ? "bg-[#E94560] text-white shadow-sm ring-1 ring-[#E94560] shadow-[0_0_15px_rgba(233,69,96,0.3)]"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     )
                   }
                 >
@@ -113,36 +109,9 @@ export default function Layout() {
             </div>
           </div>
 
-          {/* Tools */}
-          {TOOLS.length > 0 && (
-            <div>
-              <p className="text-[11px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3 px-4">Tools</p>
-              <div className="space-y-1">
-                {TOOLS.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-medium transition-all duration-200",
-                        isActive
-                          ? "bg-[#FFF9EA] text-[#D97706] shadow-sm ring-1 ring-[#FDE6B0]"
-                          : "text-[#71717A] hover:bg-[#F5F7FA] hover:text-[#1A1A1A]"
-                      )
-                    }
-                  >
-                    <HugeIcon icon={item.icon} className="w-[18px] h-[18px]" />
-                    {item.label}
-                  </NavLink>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Others */}
           <div>
-            <p className="text-[11px] font-semibold text-[#A1A1AA] uppercase tracking-wider mb-3 px-4">Others</p>
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3 px-4">Others</p>
             <div className="space-y-1">
               {OTHERS.map((item) => (
                 <NavLink
@@ -153,8 +122,8 @@ export default function Layout() {
                     cn(
                       "flex items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-medium transition-all duration-200",
                       isActive
-                        ? "bg-[#FFF9EA] text-[#D97706] shadow-sm ring-1 ring-[#FDE6B0]"
-                        : "text-[#71717A] hover:bg-[#F5F7FA] hover:text-[#1A1A1A]"
+                        ? "bg-[#E94560] text-white shadow-sm ring-1 ring-[#E94560] shadow-[0_0_15px_rgba(233,69,96,0.3)]"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     )
                   }
                 >
@@ -162,39 +131,28 @@ export default function Layout() {
                   {item.label}
                 </NavLink>
               ))}
-              
-              {/* Dark Mode toggle - just visual for now */}
-              <div className="flex items-center justify-between px-4 py-3 rounded-2xl text-[14px] font-medium text-[#71717A] cursor-pointer hover:bg-[#F5F7FA] hover:text-[#1A1A1A] transition-all duration-200">
-                <div className="flex items-center gap-3">
-                  <HugeIcon icon={Moon02Icon} className="w-[18px] h-[18px]" />
-                  Dark Mode
-                </div>
-                <div className="w-8 h-4 bg-[#E5E5E5] rounded-full flex items-center p-0.5">
-                  <div className="w-3 h-3 bg-white rounded-full"></div>
-                </div>
-              </div>
             </div>
           </div>
         </nav>
         
-        <div className="p-6 border-t border-[#E5E5E5]">
+        <div className="p-6 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-xs font-bold text-[#1A1A1A]">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
                   {user?.name.split(' ').map(n => n[0]).join('')}
                 </div>
               )}
               <div>
-                <div className="text-[14px] font-semibold text-[#1A1A1A] leading-tight">{getFormattedName()}</div>
-                <div className="text-[12px] text-[#71717A] capitalize mt-0.5">{user?.role} {user?.role === 'admin' ? 'Manager' : 'Staff'}</div>
+                <div className="text-[14px] font-semibold text-gray-900 leading-tight">{getFormattedName()}</div>
+                <div className="text-[12px] text-gray-500 capitalize mt-0.5">{user?.role} {user?.role === 'Admin' ? 'Manager' : 'Staff'}</div>
               </div>
             </div>
             <button 
               onClick={logout}
-              className="p-2 text-[#71717A] hover:text-[#EF4444] hover:bg-[#FEF2F2] rounded-xl transition-all duration-200"
+              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
               title="Log out"
             >
               <HugeIcon icon={Logout01Icon} className="w-[18px] h-[18px]" />
@@ -204,41 +162,41 @@ export default function Layout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#F5F7FA]">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#F9FAFB]">
         {/* Header Bar */}
-        <header className="h-20 bg-white border-b border-[#E5E5E5] flex items-center justify-between px-4 sm:px-8 flex-shrink-0">
+        <header className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 flex-shrink-0">
           {/* Header left */}
           <div className="flex items-center gap-4">
             <button 
-              className="lg:hidden p-2 rounded-lg text-white bg-[#437DFC]"
+              className="lg:hidden p-2 rounded-lg text-white bg-[#E94560]"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu size={20} />
             </button>
-            <div className="hidden sm:flex items-center gap-2 bg-[#F5F5F5] px-4 py-2 rounded-lg w-[200px] md:w-[300px]">
-              <HugeIcon icon={AiSearch02Icon} className="w-4 h-4 text-[#71717A]" />
+            <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg w-[200px] md:w-[300px] border border-gray-200">
+              <HugeIcon icon={AiSearch02Icon} className="w-4 h-4 text-gray-400" />
               <input 
                 type="text" 
                 placeholder="Search repairs..." 
-                className="bg-transparent border-none outline-none text-sm font-medium text-[#1A1A1A] w-full placeholder:text-[#A1A1AA]"
+                className="bg-transparent border-none outline-none text-sm font-medium text-gray-900 w-full placeholder:text-gray-500"
               />
             </div>
           </div>
 
           {/* Header right - Notifications and Profile */}
           <div className="flex items-center gap-4 sm:gap-6">
-            <button className="sm:hidden text-[#71717A] hover:text-[#1A1A1A] transition-colors relative">
+            <button className="sm:hidden text-gray-500 hover:text-gray-900 transition-colors relative">
                <HugeIcon icon={AiSearch02Icon} className="w-5 h-5" />
             </button>
-            <button className="text-[#71717A] hover:text-[#1A1A1A] transition-colors relative bg-gray-100 p-2 rounded-full">
+            <button className="text-gray-500 hover:text-gray-900 transition-colors relative bg-gray-50 p-2 rounded-full border border-gray-200">
               <HugeIcon icon={Notification01Icon} className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#F97D7D] rounded-full border border-gray-100"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
             </button>
           </div>
         </header>
 
         {/* Scrollable Page Content */}
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 w-full max-w-[100vw]">
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 w-full">
           <Outlet />
         </main>
       </div>

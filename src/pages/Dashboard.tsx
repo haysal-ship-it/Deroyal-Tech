@@ -16,7 +16,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full pb-[40px]">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-[22px] sm:text-[24px] font-bold text-[#1A1A1A] mb-1">Hi, {user?.name.split(' ')[0]} <span className="text-xl">👋</span></h1>

@@ -1,30 +1,31 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { 
-  signInAnonymously,
-  onAuthStateChanged, 
-  signOut,
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 
-type Role = 'admin' | 'sales';
+export type Role = 'Admin' | 'Sales Officer';
+export type AccessLevel = 'None' | 'View' | 'Full';
 
-interface User {
+export interface Permissions {
+  Dashboard: AccessLevel;
+  Sales: AccessLevel;
+  Repair: AccessLevel;
+  Settings: AccessLevel;
+}
+
+export interface User {
   uid: string;
+  username: string;
   name: string;
   role: Role;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  bio: string;
-  avatarUrl: string;
+  permissions: Permissions;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  avatarUrl?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (role: Role) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (newData: Partial<User>) => Promise<void>;
 }
@@ -36,81 +37,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
-          }
-        } catch (error) {
-          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+    const initAuth = async () => {
+      try {
+        // Setup initial admin if not exists
+        await fetch('/api/auth/setup', { method: 'POST' });
+        
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
         }
-      } else {
+      } catch (err) {
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    };
+    initAuth();
   }, []);
 
-  const login = async (role: Role) => {
+  const login = async (username: string, password: string) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      // Use Anonymous Auth to get a session for Firestore rules
-      const { user: firebaseUser } = await signInAnonymously(auth);
-      const userPath = `users/${firebaseUser.uid}`;
-      
-      const userData: User = {
-        uid: firebaseUser.uid,
-        name: role === 'admin' ? 'Austin Martin' : 'Sarah Simpson',
-        role: role,
-        email: role === 'admin' ? 'austin@repairtech.com' : 'sarah@repairtech.com',
-        firstName: role === 'admin' ? 'Austin' : 'Sarah',
-        lastName: role === 'admin' ? 'Martin' : 'Simpson',
-        phone: role === 'admin' ? '+09-345-346-46' : '+09-123-456-78',
-        bio: role === 'admin' ? 'UI/UX Designer' : 'Sales Specialist',
-        avatarUrl: role === 'admin' 
-          ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=2576&auto=format&fit=crop'
-          : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2574&auto=format&fit=crop'
-      };
-
-      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-      setUser(userData);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser?.uid || 'unknown'}`);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Login failed');
+      }
+      const data = await res.json();
+      setUser(data.user);
     } finally {
       setLoading(false);
     }
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
   };
 
   const updateUser = async (newData: Partial<User>) => {
     if (!user) return;
-    const userPath = `users/${user.uid}`;
-    
-    // Auto-update full name if first or last name changes
-    const updatedData = { ...newData };
-    if (updatedData.firstName !== undefined || updatedData.lastName !== undefined) {
-      const newFirstName = updatedData.firstName ?? user.firstName ?? '';
-      const newLastName = updatedData.lastName ?? user.lastName ?? '';
-      updatedData.name = `${newFirstName} ${newLastName}`.trim();
-    }
-
     try {
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, { ...user, ...updatedData }, { merge: true });
-      setUser(prev => prev ? { ...prev, ...updatedData } : null);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, userPath);
+      const res = await fetch(`/api/users/${user.uid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...user, ...newData })
+      });
+      if (res.ok) {
+        setUser({ ...user, ...newData });
+      } else {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update user');
+      }
+    } catch (err: any) {
+      console.error(err);
+      throw err;
     }
   };
 

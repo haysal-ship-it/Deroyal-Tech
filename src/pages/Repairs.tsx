@@ -37,7 +37,7 @@ export default function Repairs() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full h-full">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full h-full pb-[40px]">
       {/* Header section */}
       <div className="flex justify-between items-end">
         <div>

@@ -18,7 +18,7 @@ export default function ProtectedRoute({ allowedRoles }: { allowedRoles?: string
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={user.role === 'admin' ? '/' : '/sales'} replace />;
+    return <Navigate to={user.role === 'Admin' ? '/' : '/sales'} replace />;
   }
 
   return <Outlet />;

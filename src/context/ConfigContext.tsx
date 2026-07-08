@@ -1,6 +1,4 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 
 interface Config {
   sidebarLogoUrl: string;
@@ -15,7 +13,7 @@ interface ConfigContextType {
 }
 
 const DEFAULT_CONFIG: Config = {
-  sidebarLogoUrl: '', // Will use a default icon if empty
+  sidebarLogoUrl: '',
   sidebarName: 'RepairTech',
   loginImageUrl: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=2464&auto=format&fit=crop',
 };
@@ -26,36 +24,47 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, 'settings', 'branding'), (snapshot) => {
-      if (snapshot.exists()) {
-        setConfig(snapshot.data() as Config);
-      } else {
-        setConfig(DEFAULT_CONFIG);
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setConfig(data);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'settings/branding');
-    });
-
-    return () => unsubscribe();
+    };
+    fetchConfig();
   }, []);
 
   const updateConfig = async (newConfig: Partial<Config>) => {
-    const configPath = 'settings/branding';
     try {
-      const configRef = doc(db, 'settings', 'branding');
-      await setDoc(configRef, { ...config, ...newConfig }, { merge: true });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, configPath);
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...config, ...newConfig })
+      });
+      if (res.ok) {
+        setConfig({ ...config, ...newConfig });
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const resetToDefault = async () => {
-    const configPath = 'settings/branding';
     try {
-      const configRef = doc(db, 'settings', 'branding');
-      await setDoc(configRef, DEFAULT_CONFIG);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, configPath);
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(DEFAULT_CONFIG)
+      });
+      if (res.ok) {
+        setConfig(DEFAULT_CONFIG);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 

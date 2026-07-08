@@ -3,7 +3,6 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Sales from "./pages/Sales";
 import Repairs from "./pages/Repairs";
-import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -12,7 +11,7 @@ import { ConfigProvider } from "./context/ConfigContext";
 
 function RootRedirect() {
   const { user } = useAuth();
-  if (user?.role === 'sales') {
+  if (user?.permissions?.Dashboard === 'None') {
     return <Navigate to="/sales" replace />;
   }
   return <Dashboard />;
@@ -33,8 +32,7 @@ export default function App() {
                 <Route path="repairs" element={<Repairs />} />
                 
                 {/* Admin only routes */}
-                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                  <Route path="reports" element={<Reports />} />
+                <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
                   <Route path="settings" element={<Settings />} />
                 </Route>
               </Route>

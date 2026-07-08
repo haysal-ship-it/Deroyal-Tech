@@ -21,21 +21,16 @@ export default function Login() {
   }
 
   if (user) {
-    return <Navigate to={user.role === 'admin' ? '/' : '/sales'} replace />;
+    return <Navigate to={user.role === 'Admin' ? '/' : '/sales'} replace />;
   }
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     try {
       setError(null);
-      await login(role);
+      await login(username, password);
     } catch (err: any) {
-      if (err.message?.includes('auth/admin-restricted-operation')) {
-        setError("Login unavailable: Please enable 'Anonymous Authentication' in your Firebase Console (Sign-in method) to use this login format.");
-      } else {
-        setError("Login failed. Please check your connection or project configuration.");
-      }
-      console.error(err);
+      setError(err.message || "Login failed");
     }
   };
 
@@ -72,32 +67,6 @@ export default function Login() {
                 {error}
               </div>
             )}
-
-            {/* Segmented Control */}
-            <div className="flex rounded-xl p-1 bg-[#F4F4F5] border border-[#E5E5E5]/50">
-              <button
-                type="button"
-                onClick={() => setRole('admin')}
-                className={`flex-1 py-2.5 text-[14px] font-semibold rounded-lg transition-all ${
-                  role === 'admin' 
-                    ? 'bg-white text-[#1A1A1A] shadow-sm' 
-                    : 'text-[#A1A1AA] hover:text-[#71717A]'
-                }`}
-              >
-                Owner
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('sales')}
-                className={`flex-1 py-2.5 text-[14px] font-semibold rounded-lg transition-all ${
-                  role === 'sales' 
-                    ? 'bg-white text-[#1A1A1A] shadow-sm' 
-                    : 'text-[#A1A1AA] hover:text-[#71717A]'
-                }`}
-              >
-                Sales Staff
-              </button>
-            </div>
 
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
