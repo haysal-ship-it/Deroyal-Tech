@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader2, Save, X } from 'lucide-react';
 import { useAuth, User, Role, AccessLevel } from '../context/AuthContext';
 import { auth, db } from '../lib/firebase';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { secondaryAuth } from '../lib/firebase';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -30,33 +32,53 @@ export default function UserManagement() {
   const handleSave = async () => {
     if (!editingUser) return;
     try {
-      const token = await auth.currentUser?.getIdToken();
+      let email = editingUser.username || '';
+      if (email && !email.includes('@')) {
+        email = `${email}@example.com`;
+      }
+      if (!email) {
+        throw new Error("Username/Email is required.");
+      }
       
       if (editingUser.isNew) {
-        const res = await fetch('/api/users', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(editingUser)
-        });
-        if (!res.ok) {
-           const err = await res.json();
-           throw new Error(err.error || 'Failed to create user');
+        if (!editingUser.password) {
+          throw new Error("Password is required for new users.");
         }
+        
+        let cred;
+        try {
+           cred = await createUserWithEmailAndPassword(secondaryAuth, email, editingUser.password);
+        } catch (authErr: any) {
+           if (authErr.code === 'auth/weak-password') {
+             throw new Error("Password is too weak. Please use at least 6 characters.");
+           } else if (authErr.code === 'auth/email-already-in-use') {
+             throw new Error("This username/email is already in use.");
+           } else {
+             throw authErr;
+           }
+        }
+        
+        const newUser = {
+          username: editingUser.username,
+          email,
+          name: editingUser.name || '',
+          role: editingUser.role,
+          permissions: editingUser.permissions,
+          createdAt: serverTimestamp()
+        };
+        await setDoc(doc(db, 'users', cred.user.uid), newUser);
       } else {
-        const res = await fetch(`/api/users/${editingUser.uid}`, {
-          method: 'PUT',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(editingUser)
-        });
-        if (!res.ok) {
-           const err = await res.json();
-           throw new Error(err.error || 'Failed to update user');
+        const updatedUser: any = {
+          username: editingUser.username,
+          email,
+          name: editingUser.name,
+          role: editingUser.role,
+          permissions: editingUser.permissions,
+        };
+        await updateDoc(doc(db, 'users', editingUser.uid!), updatedUser);
+        
+        if (editingUser.password) {
+           alert("User details saved. Note: Password cannot be updated from here due to security restrictions. The user must use 'Forgot Password' or you can delete and recreate them.");
         }
       }
       setEditingUser(null);
@@ -66,22 +88,13 @@ export default function UserManagement() {
   };
 
   const handleDelete = async (uid: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    if (!confirm('Are you sure you want to delete this user? (Note: This will only revoke their app access, not their authentication record due to security restrictions)')) return;
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch(`/api/users/${uid}`, { 
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!res.ok) throw new Error('Failed to delete');
+      await deleteDoc(doc(db, 'users', uid));
     } catch (err: any) {
       alert(err.message);
     }
   };
-
-  if (loading) return <div className="p-4 flex items-center justify-center"><Loader2 className="animate-spin text-[#E94560]" /></div>;
 
   return (
     <div className="space-y-6">
@@ -123,7 +136,7 @@ export default function UserManagement() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">{editingUser.isNew ? 'Password' : 'New Password (leave blank to keep current)'}</label>
-                  <input type="password" value={editingUser.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]" />
+                  <input type="text" value={editingUser.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Full Name</label>
