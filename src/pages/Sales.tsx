@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { SALES_DATA } from "../data/mockData";
+import { useState, useEffect } from "react";
+import { db } from "../lib/firebase";
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { Plus, Receipt, Pencil, MoreVertical, Eye } from "lucide-react";
 import InvoiceModal from "../components/InvoiceModal";
 import { cn } from "../lib/utils";
@@ -10,6 +11,46 @@ export default function Sales() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [category, setCategory] = useState<string>("");
   const [invoiceFilter, setInvoiceFilter] = useState<string>("outstanding");
+
+  const [itemName, setItemName] = useState("");
+  const [qty, setQty] = useState(1);
+  const [price, setPrice] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("Card");
+  const [sales, setSales] = useState<any[]>([]);
+
+  useEffect(() => {
+    const q = query(collection(db, "sales"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snapshot) => {
+      setSales(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (error) => {
+      if (error.code !== 'permission-denied') {
+        console.error("Snapshot error:", error);
+      }
+    });
+    return unsub;
+  }, []);
+
+  const handleRecordSale = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!itemName) return;
+    try {
+      await addDoc(collection(db, "sales"), {
+        item: itemName,
+        category: category || "Accessories",
+        qty: Number(qty),
+        amount: Number(qty) * Number(price),
+        paymentMethod,
+        date: new Date().toISOString().split('T')[0], // yyyy-mm-dd
+        createdAt: serverTimestamp()
+      });
+      setItemName("");
+      setQty(1);
+      setPrice(0);
+    } catch (err) {
+      console.error(err);
+      alert("Error recording sale");
+    }
+  };
 
   const CATEGORY_OPTIONS = [
     { value: "Accessories", label: "Accessories", icon: <Headphones size={16} /> },
@@ -51,10 +92,10 @@ export default function Sales() {
         <div className="bg-white p-5 rounded-2xl border border-[#E5E5E5] shadow-sm">
           <h2 className="text-sm font-semibold text-[#1A1A1A] mb-5">Record New Sale</h2>
           
-          <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <form onSubmit={handleRecordSale} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <div className="flex flex-col gap-1.5 lg:col-span-2">
               <label htmlFor="itemName" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Item Name</label>
-              <input id="itemName" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="e.g. iPhone 14 Case" />
+              <input id="itemName" type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} required className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="e.g. iPhone 14 Case" />
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -69,14 +110,14 @@ export default function Sales() {
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="qty" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Quantity</label>
-              <input id="qty" type="number" min="1" defaultValue="1" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" />
+              <input id="qty" type="number" min="1" value={qty} onChange={(e) => setQty(Number(e.target.value))} required className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" />
             </div>
             
             <div className="flex flex-col gap-1.5">
               <label htmlFor="price" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Unit Price</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A] font-mono">$</span>
-                <input id="price" type="number" step="0.01" className="h-10 pl-7 pr-3 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="0.00" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A] font-mono">₦</span>
+                <input id="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(Number(e.target.value))} required className="h-10 pl-7 pr-3 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="0.00" />
               </div>
             </div>
 
@@ -84,7 +125,7 @@ export default function Sales() {
               <label className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Payment Method</label>
               <div className="flex gap-2">
                 {['Card', 'Cash', 'Transfer'].map((method) => (
-                  <button key={method} type="button" className="h-10 px-6 border border-[#E5E5E5] rounded-lg text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F5] focus:border-[#1A1A1A] focus:bg-[#F5F5F5] transition-colors">
+                  <button key={method} type="button" onClick={() => setPaymentMethod(method)} className={`h-10 px-6 border rounded-lg text-sm font-medium transition-colors ${paymentMethod === method ? 'border-[#1A1A1A] bg-[#1A1A1A] text-white' : 'border-[#E5E5E5] text-[#1A1A1A] hover:bg-[#F5F5F5]'}`}>
                     {method}
                   </button>
                 ))}
@@ -94,7 +135,7 @@ export default function Sales() {
             <div className="lg:col-span-2 flex items-end justify-between lg:justify-end gap-6">
               <div className="flex flex-col mb-1 lg:mb-0 lg:text-right">
                 <span className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Total</span>
-                <span className="text-2xl font-bold text-[#1A1A1A] mt-1">$0.00</span>
+                <span className="text-2xl font-bold text-[#1A1A1A] mt-1">₦{(Number(qty) * Number(price)).toFixed(2)}</span>
               </div>
               <button type="submit" className="h-10 px-6 bg-[#1A1A1A] text-white text-sm font-medium rounded-lg hover:bg-black transition-colors whitespace-nowrap">
                 Record Sale
@@ -136,7 +177,7 @@ export default function Sales() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F0F0F0]">
-                {SALES_DATA.map((sale) => (
+                {sales.map((sale) => (
                   <tr key={sale.id} className="hover:bg-[#FAFAFA] transition-colors group">
                     <td className="px-6 py-4"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black opacity-50 group-hover:opacity-100 transition-opacity" /></td>
                     <td className="px-6 py-4 text-[#8B8D97]">{sale.id}</td>
@@ -146,7 +187,7 @@ export default function Sales() {
                       <div className="text-[12px] text-[#A1A1AA] mt-0.5">{sale.category}</div>
                     </td>
                     <td className="px-6 py-4 text-right font-medium">{sale.qty}</td>
-                    <td className="px-6 py-4 text-right font-medium">${sale.amount.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-medium">₦{sale.amount.toFixed(2)}</td>
                     <td className="px-6 py-4 font-medium">
                       <div className="flex items-center gap-2">
                         <div className={cn("w-1.5 h-1.5 rounded-full", sale.paymentMethod.toLowerCase() === "cash" ? "bg-green-500" : "bg-blue-500")} />

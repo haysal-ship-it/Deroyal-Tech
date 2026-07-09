@@ -22,7 +22,7 @@ const PerformanceTooltip = ({ active, payload, label }: any) => {
               <div className="w-2.5 h-2.5 rounded-full bg-indigo-500"></div>
               <span className="text-[13px] font-medium text-[#71717A]">Total Revenue</span>
             </div>
-            <span className="text-[14px] font-bold text-[#1A1A1A]">${(data.revenue / 1000).toFixed(1)}k</span>
+            <span className="text-[14px] font-bold text-[#1A1A1A]">₦{(data.revenue / 1000).toFixed(1)}k</span>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ export function PerformanceOverviewChart() {
               tickLine={false} 
               tick={{ fontSize: 13, fill: '#A1A1AA', fontWeight: 500 }} 
               dx={-15}
-              tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}
+              tickFormatter={(value) => value >= 1000 ? `₦${(value / 1000).toFixed(0)}k` : value}
             />
             <Tooltip 
                content={<PerformanceTooltip />}

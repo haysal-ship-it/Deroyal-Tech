@@ -112,7 +112,7 @@ export default function UserManagement() {
             role: 'Sales Officer',
             permissions: { Dashboard: 'None', Sales: 'None', Repair: 'None', Settings: 'None' }
           })}
-          className="flex items-center gap-2 bg-[#E94560] hover:shadow-[0_0_15px_rgba(233,69,96,0.3)] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 bg-[#0561FC] hover:shadow-[0_0_15px_rgba(5,97,252,0.3)] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           <Plus size={16} /> Add User
         </button>
@@ -132,19 +132,19 @@ export default function UserManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Username / Email</label>
-                  <input type="text" value={editingUser.username || ''} onChange={e => setEditingUser({...editingUser, username: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]" />
+                  <input type="text" value={editingUser.username || ''} onChange={e => setEditingUser({...editingUser, username: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#0561FC] focus:ring-1 focus:ring-[#0561FC]" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">{editingUser.isNew ? 'Password' : 'New Password (leave blank to keep current)'}</label>
-                  <input type="text" value={editingUser.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]" />
+                  <input type="text" value={editingUser.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#0561FC] focus:ring-1 focus:ring-[#0561FC]" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Full Name</label>
-                  <input type="text" value={editingUser.name || ''} onChange={e => setEditingUser({...editingUser, name: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]" />
+                  <input type="text" value={editingUser.name || ''} onChange={e => setEditingUser({...editingUser, name: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#0561FC] focus:ring-1 focus:ring-[#0561FC]" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Role</label>
-                  <select value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value as Role})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]">
+                  <select value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value as Role})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#0561FC] focus:ring-1 focus:ring-[#0561FC]">
                     <option value="Admin">Admin</option>
                     <option value="Sales Officer">Sales Officer</option>
                   </select>
@@ -163,7 +163,7 @@ export default function UserManagement() {
                           ...editingUser, 
                           permissions: { ...editingUser.permissions, [mod]: e.target.value } as any
                         })}
-                        className="text-sm px-2 py-1 border border-gray-200 rounded bg-white text-gray-900 outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]"
+                        className="text-sm px-2 py-1 border border-gray-200 rounded bg-white text-gray-900 outline-none focus:border-[#0561FC] focus:ring-1 focus:ring-[#0561FC]"
                       >
                         <option value="None">None</option>
                         <option value="View">View</option>
@@ -177,7 +177,7 @@ export default function UserManagement() {
 
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
               <button onClick={() => setEditingUser(null)} className="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-md font-medium text-sm hover:bg-gray-100">Cancel</button>
-              <button onClick={handleSave} className="px-4 py-2 bg-[#E94560] text-white rounded-md font-medium text-sm flex items-center gap-2 hover:shadow-[0_0_15px_rgba(233,69,96,0.3)]">
+              <button onClick={handleSave} className="px-4 py-2 bg-[#0561FC] text-white rounded-md font-medium text-sm flex items-center gap-2 hover:shadow-[0_0_15px_rgba(5,97,252,0.3)]">
                 <Save size={16} /> Save User
               </button>
             </div>
@@ -219,7 +219,7 @@ export default function UserManagement() {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                   <button onClick={() => setEditingUser(u)} className="p-1.5 text-gray-400 hover:text-[#E94560] transition-colors"><Pencil size={16} /></button>
+                   <button onClick={() => setEditingUser(u)} className="p-1.5 text-gray-400 hover:text-[#0561FC] transition-colors"><Pencil size={16} /></button>
                    <button onClick={() => handleDelete(u.uid)} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors ml-2"><Trash2 size={16} /></button>
                 </td>
               </tr>

@@ -108,7 +108,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       if (userDoc.exists()) {
-        setUser({ uid: userCredential.user.uid, ...userDoc.data() } as User);
+        const data = userDoc.data();
+        // Fallback for missing permissions
+        if (!data.permissions && data.role === 'Admin') {
+          data.permissions = { Dashboard: 'Full', Sales: 'Full', Repair: 'Full', Settings: 'Full' };
+        }
+        setUser({ uid: userCredential.user.uid, ...data } as User);
       } else {
         // Just in case it's the very first login and they created account via console
         const newUser: Omit<User, 'uid'> = {

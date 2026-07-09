@@ -38,7 +38,7 @@ export default function Layout() {
       return `${user.firstName} ${user.lastName.charAt(0)}.`;
     }
     if (user.name) {
-      const parts = user.name.trim().split(' ');
+      const parts = (user.name || '').trim().split(' ');
       if (parts.length > 1) {
         return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
       }
@@ -96,7 +96,7 @@ export default function Layout() {
                     cn(
                       "flex items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-medium transition-all duration-200",
                       isActive
-                        ? "bg-[#E94560] text-white shadow-sm ring-1 ring-[#E94560] shadow-[0_0_15px_rgba(233,69,96,0.3)]"
+                        ? "bg-[#0561FC] text-white shadow-sm ring-1 ring-[#0561FC] shadow-[0_0_15px_rgba(5,97,252,0.3)]"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     )
                   }
@@ -121,7 +121,7 @@ export default function Layout() {
                     cn(
                       "flex items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-medium transition-all duration-200",
                       isActive
-                        ? "bg-[#E94560] text-white shadow-sm ring-1 ring-[#E94560] shadow-[0_0_15px_rgba(233,69,96,0.3)]"
+                        ? "bg-[#0561FC] text-white shadow-sm ring-1 ring-[#0561FC] shadow-[0_0_15px_rgba(5,97,252,0.3)]"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     )
                   }
@@ -141,7 +141,7 @@ export default function Layout() {
                 <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-                  {user?.name.split(' ').map(n => n[0]).join('')}
+                  {user?.name?.split(' ').map(n => n[0]).join('') || '?'}
                 </div>
               )}
               <div>
@@ -167,7 +167,7 @@ export default function Layout() {
           {/* Header left */}
           <div className="flex items-center gap-4">
             <button 
-              className="lg:hidden p-2 rounded-lg text-white bg-[#E94560]"
+              className="lg:hidden p-2 rounded-lg text-white bg-[#0561FC]"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu size={20} />

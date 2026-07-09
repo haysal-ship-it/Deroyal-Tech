@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { REPAIR_DATA } from "../data/mockData";
+import { useState, useEffect } from "react";
+import { db } from "../lib/firebase";
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { Plus, Pencil, MoreVertical } from "lucide-react";
 import { cn } from "../lib/utils";
 import { CustomDropdown } from "../components/CustomDropdown";
@@ -11,14 +12,58 @@ export default function Repairs() {
   const [activeTab, setActiveTab] = useState("All");
   const [jobStatus, setJobStatus] = useState<string>("Pending");
 
+  const [customer, setCustomer] = useState("");
+  const [phone, setPhone] = useState("");
+  const [deviceType, setDeviceType] = useState("");
+  const [issue, setIssue] = useState("");
+  const [cost, setCost] = useState(0);
+  const [repairs, setRepairs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const q = query(collection(db, "repairs"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snapshot) => {
+      setRepairs(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => {
+      console.error("Repairs snapshot error:", err);
+    });
+    return unsub;
+  }, []);
+
+  const handleLogJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customer || !deviceType) return;
+    try {
+      await addDoc(collection(db, "repairs"), {
+        customer,
+        phone,
+        device: deviceType,
+        issue,
+        cost: Number(cost),
+        status: jobStatus,
+        createdAt: serverTimestamp()
+      });
+      setCustomer("");
+      setPhone("");
+      setDeviceType("");
+      setIssue("");
+      setCost(0);
+      setJobStatus("Pending");
+    } catch (err) {
+      console.error(err);
+      alert("Error logging job");
+    }
+  };
+
+  const filteredRepairs = repairs.filter((repair) => 
+    activeTab === "All" ? true : repair.status === activeTab
+  );
+
   const STATUS_OPTIONS = [
     { value: "Pending", label: "Pending", icon: <Clock size={16} />, iconColor: "text-amber-500", bgColor: "bg-amber-50", textColor: "text-amber-600" },
     { value: "In Progress", label: "In Progress", icon: <Activity size={16} />, iconColor: "text-blue-500", bgColor: "bg-blue-50", textColor: "text-blue-600" },
   ];
 
-  const filteredRepairs = REPAIR_DATA.filter((repair) => 
-    activeTab === "All" ? true : repair.status === activeTab
-  );
+  
 
   const getDotColor = (status: string) => {
     switch (status) {
@@ -50,32 +95,32 @@ export default function Repairs() {
         <div className="bg-white p-5 rounded-2xl border border-[#E5E5E5] shadow-sm">
           <h2 className="text-sm font-semibold text-[#1A1A1A] mb-5">Log New Job</h2>
           
-          <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <form onSubmit={handleLogJob} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="customer" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Customer Name</label>
-              <input id="customer" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="First Last" />
+              <input id="customer" type="text" value={customer} onChange={e => setCustomer(e.target.value)} required className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="First Last" />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="phone" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Phone Number</label>
-              <input id="phone" type="tel" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="(555) 000-0000" />
+              <input id="phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} required className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="(555) 000-0000" />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="deviceType" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Device Type</label>
-              <input id="deviceType" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="e.g. iPhone 13 Pro" />
+              <input id="deviceType" type="text" value={deviceType} onChange={e => setDeviceType(e.target.value)} required className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="e.g. iPhone 13 Pro" />
             </div>
 
             <div className="flex flex-col gap-1.5 lg:col-span-3">
               <label htmlFor="issue" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Reported Issue</label>
-              <input id="issue" type="text" className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="Briefly describe the problem..." />
+              <input id="issue" type="text" value={issue} onChange={e => setIssue(e.target.value)} required className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="Briefly describe the problem..." />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="cost" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Est. Cost</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A] font-mono">$</span>
-                <input id="cost" type="number" step="0.01" className="h-10 pl-7 pr-3 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="0.00" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A] font-mono">₦</span>
+                <input id="cost" type="number" step="0.01" value={cost} onChange={e => setCost(Number(e.target.value))} required className="h-10 pl-7 pr-3 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]" placeholder="0.00" />
               </div>
             </div>
             
@@ -140,7 +185,7 @@ export default function Repairs() {
                     <td className="px-6 py-4 font-medium">{repair.customer}</td>
                     <td className="px-6 py-4">{repair.device}</td>
                     <td className="px-6 py-4 text-[#71717A] max-w-[150px] truncate">{repair.issue}</td>
-                    <td className="px-6 py-4 text-right font-medium">${repair.cost.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-medium">₦{repair.cost.toFixed(2)}</td>
                     <td className="px-6 py-4 font-medium">
                       <div className="flex items-center gap-2">
                         <div className={cn("w-1.5 h-1.5 rounded-full", getDotColor(repair.status))} />

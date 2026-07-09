@@ -1,24 +1,70 @@
-import { MOCK_KPI_DATA, RECENT_ACTIVITY } from "../data/mockData";
+import { db } from "../lib/firebase";
+import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
+import { useState, useEffect } from "react";
 import { DollarSign, Wrench, CheckCircle2, Package, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
 import { PerformanceOverviewChart } from "../components/DashboardCharts";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [sales, setSales] = useState<any[]>([]);
+  const [repairs, setRepairs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const qSales = query(collection(db, "sales"), orderBy("createdAt", "desc"));
+    const unsubSales = onSnapshot(qSales, (snap) => {
+      setSales(snap.docs.map(d => ({ id: d.id, ...d.data(), _type: 'sale' })));
+    }, (error) => {
+      if (error.code !== 'permission-denied') console.error(error);
+    });
+
+    const qRepairs = query(collection(db, "repairs"), orderBy("createdAt", "desc"));
+    const unsubRepairs = onSnapshot(qRepairs, (snap) => {
+      setRepairs(snap.docs.map(d => ({ id: d.id, ...d.data(), _type: 'repair' })));
+    }, (error) => {
+      if (error.code !== 'permission-denied') console.error(error);
+    });
+
+    return () => {
+      unsubSales();
+      unsubRepairs();
+    };
+  }, []);
+
+  // Compute stats
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todaySales = sales.filter(s => s.date === todayStr || (s.createdAt && new Date(s.createdAt.toDate()).toISOString().split('T')[0] === todayStr));
+  const todayRevenue = todaySales.reduce((acc, s) => acc + (Number(s.amount) || 0), 0);
+  const openRepairs = repairs.filter(r => r.status !== 'Completed' && r.status !== 'Collected').length;
+  const completedJobs = repairs.filter(r => r.status === 'Completed' || r.status === 'Collected').length;
+  const newSales = todaySales.length;
+
+  const allActivity = [...sales, ...repairs]
+    .filter(a => a.createdAt)
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
+    .slice(0, 4)
+    .map(a => ({
+      id: a.id,
+      type: a._type,
+      message: a._type === 'sale' ? `${a.item} sold` : `${a.device} logged (${a.status})`,
+      date: new Date(a.createdAt.toDate()).toLocaleString(),
+      amount: a._type === 'sale' ? Number(a.amount) : Number(a.cost)
+    }));
   const { user } = useAuth();
 
   const kpis = [
-    { label: "Today's Revenue", value: `$${MOCK_KPI_DATA.todayRevenue.toFixed(2)}`, delta: "12.5%", isPositive: true, icon: DollarSign, subtext: "+$150 from yesterday" },
-    { label: "Open Repairs", value: MOCK_KPI_DATA.openRepairs, delta: "2.1%", isPositive: false, icon: Wrench, subtext: "-2 from yesterday" },
-    { label: "Completed Jobs", value: MOCK_KPI_DATA.completedJobs, delta: "4.0%", isPositive: true, icon: CheckCircle2, subtext: "92% goal reached" },
-    { label: "New Sales", value: MOCK_KPI_DATA.newSales, delta: "24.5%", isPositive: true, icon: Package, subtext: "Avg. $45 / sale" },
+    { label: "Today's Revenue", value: `₦${todayRevenue.toFixed(2)}`, delta: "12.5%", isPositive: true, icon: DollarSign, subtext: "+₦150 from yesterday" },
+    { label: "Open Repairs", value: openRepairs, delta: "2.1%", isPositive: false, icon: Wrench, subtext: "-2 from yesterday" },
+    { label: "Completed Jobs", value: completedJobs, delta: "4.0%", isPositive: true, icon: CheckCircle2, subtext: "92% goal reached" },
+    { label: "New Sales", value: newSales, delta: "24.5%", isPositive: true, icon: Package, subtext: "Avg. ₦45 / sale" },
   ];
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full pb-[40px]">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-[22px] sm:text-[24px] font-bold text-[#1A1A1A] mb-1">Hi, {user?.name.split(' ')[0]} <span className="text-xl">👋</span></h1>
+          <h1 className="text-[22px] sm:text-[24px] font-bold text-[#1A1A1A] mb-1">Hi, {user?.name?.split(' ')[0] || user?.username || 'User'} <span className="text-xl">👋</span></h1>
           <p className="text-[14px] text-[#A1A1AA] font-medium">Let's look the overview here.</p>
         </div>
       </div>
@@ -64,7 +110,7 @@ export default function Dashboard() {
         </div>
         
         <div className="bg-white rounded-[24px] p-2 border border-[#E5E5E5] shadow-sm flex flex-col gap-2">
-          {RECENT_ACTIVITY.slice(0, 4).map((activity, idx) => {
+          {allActivity.map((activity, idx) => {
             const isIncoming = activity.type === "sale" || activity.message.includes("completed");
             return (
               <div key={activity.id} className="flex items-center justify-between p-3 sm:p-4 bg-white hover:bg-gray-50 rounded-2xl transition-colors cursor-pointer border border-transparent hover:border-gray-100">
@@ -84,7 +130,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-[14px] font-bold text-[#1A1A1A]">
-                  {isIncoming ? "+" : ""}${activity.amount.toFixed(2)}
+                  {isIncoming ? "+" : ""}₦{activity.amount.toFixed(2)}
                 </div>
               </div>
             );

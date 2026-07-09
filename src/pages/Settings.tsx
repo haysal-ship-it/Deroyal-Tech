@@ -111,7 +111,7 @@ export default function Settings() {
         <button 
           onClick={() => handleSaveBranding()}
           disabled={isSaving || activeTab !== 'branding'}
-          className={cn("bg-[#E94560] hover:shadow-[0_0_15px_rgba(233,69,96,0.5)] text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto", (isSaving || activeTab !== 'branding') ? "opacity-50 cursor-not-allowed hover:shadow-none" : "")}
+          className={cn("bg-[#0561FC] hover:shadow-[0_0_15px_rgba(5,97,252,0.5)] text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto", (isSaving || activeTab !== 'branding') ? "opacity-50 cursor-not-allowed hover:shadow-none" : "")}
         >
           {isSaving && <Loader2 size={16} className="animate-spin" />}
           Save Changes
@@ -177,7 +177,7 @@ export default function Settings() {
                     value={brandingForm.sidebarName || ''} 
                     onChange={(e) => setBrandingForm({...brandingForm, sidebarName: e.target.value})}
                     placeholder="Deroyal Tech"
-                    className="w-full md:w-[300px] bg-white text-gray-900 px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]"
+                    className="w-full md:w-[300px] bg-white text-gray-900 px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:border-[#0561FC] focus:ring-1 focus:ring-[#0561FC]"
                   />
                 </div>
               </div>

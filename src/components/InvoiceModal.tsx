@@ -71,8 +71,8 @@ export default function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
                     <div className="text-xs text-[#71717A] mt-0.5">{invoice.category}</div>
                   </td>
                   <td className="px-4 py-4 text-center font-medium text-[#1A1A1A]">{invoice.qty}</td>
-                  <td className="px-4 py-4 text-right font-medium text-[#1A1A1A]">${(invoice.amount / invoice.qty).toFixed(2)}</td>
-                  <td className="px-4 py-4 text-right font-medium text-[#1A1A1A]">${invoice.amount.toFixed(2)}</td>
+                  <td className="px-4 py-4 text-right font-medium text-[#1A1A1A]">₦{(invoice.amount / invoice.qty).toFixed(2)}</td>
+                  <td className="px-4 py-4 text-right font-medium text-[#1A1A1A]">₦{invoice.amount.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -82,15 +82,15 @@ export default function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
             <div className="w-64 space-y-3">
               <div className="flex justify-between text-sm text-[#71717A]">
                 <span>Subtotal</span>
-                <span>${invoice.amount.toFixed(2)}</span>
+                <span>₦{invoice.amount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-[#71717A]">
                 <span>Tax (0%)</span>
-                <span>$0.00</span>
+                <span>₦0.00</span>
               </div>
               <div className="flex justify-between text-base font-bold text-[#1A1A1A] pt-3 border-t border-[#E5E5E5]">
                 <span>Total</span>
-                <span>${invoice.amount.toFixed(2)}</span>
+                <span>₦{invoice.amount.toFixed(2)}</span>
               </div>
             </div>
           </div>
