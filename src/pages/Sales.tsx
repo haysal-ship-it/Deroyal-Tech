@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { SALES_DATA } from "../data/mockData";
-import { Add01Icon, ReceiptDollarIcon as Receipt01Icon, PencilEdit02Icon, MoreIcon, EyeIcon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "../components/HugeIcon";
+import { Plus, Receipt, Pencil, MoreVertical, Eye } from "lucide-react";
 import InvoiceModal from "../components/InvoiceModal";
 import { cn } from "../lib/utils";
 import { CustomDropdown } from "../components/CustomDropdown";
@@ -37,11 +36,11 @@ export default function Sales() {
         </div>
         <div className="flex gap-4">
           <button className="px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 text-[#1A1A1A]">
-            <HugeIcon icon={Receipt01Icon} className="w-4 h-4" />
+            <Receipt className="w-4 h-4" />
             View Invoices
           </button>
           <button className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-black">
-            <HugeIcon icon={Add01Icon} className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             New Sales Invoice
           </button>
         </div>
@@ -161,13 +160,13 @@ export default function Sales() {
                           className="hover:text-[#1A1A1A]"
                           title="View Invoice"
                         >
-                          <HugeIcon icon={EyeIcon} className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button className="hover:text-[#1A1A1A]">
-                          <HugeIcon icon={PencilEdit02Icon} className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" />
                         </button>
                         <button className="hover:text-[#1A1A1A]">
-                          <HugeIcon icon={MoreIcon} className="w-4 h-4" />
+                          <MoreVertical className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

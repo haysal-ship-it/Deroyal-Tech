@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { REPAIR_DATA } from "../data/mockData";
-import { Add01Icon, PencilEdit02Icon, MoreIcon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "../components/HugeIcon";
+import { Plus, Pencil, MoreVertical } from "lucide-react";
 import { cn } from "../lib/utils";
 import { CustomDropdown } from "../components/CustomDropdown";
 import { Clock, Activity } from "lucide-react";
@@ -91,7 +90,7 @@ export default function Repairs() {
 
             <div className="flex items-end">
               <button type="submit" className="w-full h-10 flex items-center justify-center gap-2 bg-[#1A1A1A] text-white text-sm font-medium rounded-lg hover:bg-black transition-colors">
-                <HugeIcon icon={Add01Icon} className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
                 Log Job
               </button>
             </div>
@@ -151,10 +150,10 @@ export default function Repairs() {
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-3 text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="hover:text-[#1A1A1A]">
-                          <HugeIcon icon={PencilEdit02Icon} className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" />
                         </button>
                         <button className="hover:text-[#1A1A1A]">
-                          <HugeIcon icon={MoreIcon} className="w-4 h-4" />
+                          <MoreVertical className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

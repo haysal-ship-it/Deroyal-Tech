@@ -1,7 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Rectangle, RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
 import { PERFORMANCE_DATA } from "../data/mockData";
-import { HugeIcon } from "./HugeIcon";
-import { MoreIcon } from "@hugeicons/core-free-icons";
+import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 
 const PerformanceTooltip = ({ active, payload, label }: any) => {

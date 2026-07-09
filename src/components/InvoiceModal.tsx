@@ -1,5 +1,4 @@
-import { Cancel01Icon, PrinterIcon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "./HugeIcon";
+import { X, Printer } from "lucide-react";
 
 interface InvoiceModalProps {
   invoice: any;
@@ -22,14 +21,14 @@ export default function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
               onClick={() => window.print()}
               className="flex items-center gap-2 px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm font-medium hover:bg-gray-50 text-[#1A1A1A] transition-colors"
             >
-              <HugeIcon icon={PrinterIcon} className="w-4 h-4" />
+              <Printer className="w-4 h-4" />
               Print
             </button>
             <button 
               onClick={onClose}
               className="p-2 text-[#71717A] hover:text-[#1A1A1A] hover:bg-gray-50 rounded-lg transition-colors"
             >
-              <HugeIcon icon={Cancel01Icon} className="w-5 h-5" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>

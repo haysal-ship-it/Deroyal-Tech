@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
 interface Config {
   sidebarLogoUrl: string;
@@ -24,30 +26,23 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const res = await fetch('/api/settings');
-        if (res.ok) {
-          const data = await res.json();
-          setConfig(data);
-        }
-      } catch (err) {
-        console.error(err);
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'branding'), (docSnap) => {
+      if (docSnap.exists()) {
+        setConfig(docSnap.data() as Config);
+      } else {
+        setConfig(DEFAULT_CONFIG);
       }
-    };
-    fetchConfig();
+    }, (err) => {
+      console.error("Error fetching config:", err);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const updateConfig = async (newConfig: Partial<Config>) => {
     try {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...config, ...newConfig })
-      });
-      if (res.ok) {
-        setConfig({ ...config, ...newConfig });
-      }
+      const mergedConfig = { ...config, ...newConfig };
+      await setDoc(doc(db, 'settings', 'branding'), mergedConfig, { merge: true });
     } catch (err) {
       console.error(err);
     }
@@ -55,14 +50,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   const resetToDefault = async () => {
     try {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(DEFAULT_CONFIG)
-      });
-      if (res.ok) {
-        setConfig(DEFAULT_CONFIG);
-      }
+      await setDoc(doc(db, 'settings', 'branding'), DEFAULT_CONFIG);
     } catch (err) {
       console.error(err);
     }

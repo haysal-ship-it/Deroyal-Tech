@@ -1,6 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Layout01Icon, ShoppingCart01Icon, Wrench01Icon, Notification01Icon, AiSearch02Icon, Logout01Icon, Settings01Icon, HelpCircleIcon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "./HugeIcon";
+import { LayoutDashboard, ShoppingCart, Wrench, Bell, Search, LogOut, Settings, HelpCircle } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
@@ -24,13 +23,13 @@ export default function Layout() {
   }, []);
 
   const MAIN_MENU = [
-    ...(user?.permissions?.Dashboard !== 'None' ? [{ label: "Dashboard", path: "/", icon: Layout01Icon }] : []),
-    ...(user?.permissions?.Sales !== 'None' ? [{ label: "Sales", path: "/sales", icon: ShoppingCart01Icon }] : []),
-    ...(user?.permissions?.Repair !== 'None' ? [{ label: "Repairs", path: "/repairs", icon: Wrench01Icon }] : []),
+    ...(user?.permissions?.Dashboard !== 'None' ? [{ label: "Dashboard", path: "/", icon: LayoutDashboard }] : []),
+    ...(user?.permissions?.Sales !== 'None' ? [{ label: "Sales", path: "/sales", icon: ShoppingCart }] : []),
+    ...(user?.permissions?.Repair !== 'None' ? [{ label: "Repairs", path: "/repairs", icon: Wrench }] : []),
   ];
 
   const OTHERS = [
-    ...(user?.permissions?.Settings === 'Full' ? [{ label: "Settings", path: "/settings", icon: Settings01Icon }] : []),
+    ...(user?.permissions?.Settings === 'Full' ? [{ label: "Settings", path: "/settings", icon: Settings }] : []),
   ];
 
   const getFormattedName = () => {
@@ -102,7 +101,7 @@ export default function Layout() {
                     )
                   }
                 >
-                  <HugeIcon icon={item.icon} className="w-[18px] h-[18px]" />
+                  <item.icon className="w-[18px] h-[18px]" />
                   {item.label}
                 </NavLink>
               ))}
@@ -127,7 +126,7 @@ export default function Layout() {
                     )
                   }
                 >
-                  <HugeIcon icon={item.icon} className="w-[18px] h-[18px]" />
+                  <item.icon className="w-[18px] h-[18px]" />
                   {item.label}
                 </NavLink>
               ))}
@@ -155,7 +154,7 @@ export default function Layout() {
               className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
               title="Log out"
             >
-              <HugeIcon icon={Logout01Icon} className="w-[18px] h-[18px]" />
+              <LogOut className="w-[18px] h-[18px]" />
             </button>
           </div>
         </div>
@@ -174,7 +173,7 @@ export default function Layout() {
               <Menu size={20} />
             </button>
             <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg w-[200px] md:w-[300px] border border-gray-200">
-              <HugeIcon icon={AiSearch02Icon} className="w-4 h-4 text-gray-400" />
+              <Search className="w-4 h-4 text-gray-400" />
               <input 
                 type="text" 
                 placeholder="Search repairs..." 
@@ -186,10 +185,10 @@ export default function Layout() {
           {/* Header right - Notifications and Profile */}
           <div className="flex items-center gap-4 sm:gap-6">
             <button className="sm:hidden text-gray-500 hover:text-gray-900 transition-colors relative">
-               <HugeIcon icon={AiSearch02Icon} className="w-5 h-5" />
+               <Search className="w-5 h-5" />
             </button>
             <button className="text-gray-500 hover:text-gray-900 transition-colors relative bg-gray-50 p-2 rounded-full border border-gray-200">
-              <HugeIcon icon={Notification01Icon} className="w-5 h-5" />
+              <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
             </button>
           </div>

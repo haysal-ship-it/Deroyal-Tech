@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Loader2, Save, X } from 'lucide-react';
 import { useAuth, User, Role, AccessLevel } from '../context/AuthContext';
+import { auth, db } from '../lib/firebase';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -8,30 +10,35 @@ export default function UserManagement() {
   const [error, setError] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<Partial<User> & { password?: string, isNew?: boolean } | null>(null);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch('/api/users');
-      if (!res.ok) throw new Error('Failed to fetch users');
-      const data = await res.json();
-      setUsers(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchUsers();
+    const q = query(collection(db, 'users'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const userList: User[] = [];
+      snapshot.forEach(doc => {
+        userList.push({ uid: doc.id, ...doc.data() } as User);
+      });
+      setUsers(userList);
+      setLoading(false);
+    }, (err) => {
+      setError(err.message);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleSave = async () => {
     if (!editingUser) return;
     try {
+      const token = await auth.currentUser?.getIdToken();
+      
       if (editingUser.isNew) {
         const res = await fetch('/api/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify(editingUser)
         });
         if (!res.ok) {
@@ -41,7 +48,10 @@ export default function UserManagement() {
       } else {
         const res = await fetch(`/api/users/${editingUser.uid}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify(editingUser)
         });
         if (!res.ok) {
@@ -50,7 +60,6 @@ export default function UserManagement() {
         }
       }
       setEditingUser(null);
-      fetchUsers();
     } catch (err: any) {
       alert(err.message);
     }
@@ -59,9 +68,14 @@ export default function UserManagement() {
   const handleDelete = async (uid: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
     try {
-      const res = await fetch(`/api/users/${uid}`, { method: 'DELETE' });
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch(`/api/users/${uid}`, { 
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!res.ok) throw new Error('Failed to delete');
-      fetchUsers();
     } catch (err: any) {
       alert(err.message);
     }
@@ -104,7 +118,7 @@ export default function UserManagement() {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Username</label>
+                  <label className="text-sm font-medium text-gray-700">Username / Email</label>
                   <input type="text" value={editingUser.username || ''} onChange={e => setEditingUser({...editingUser, username: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#E94560] focus:ring-1 focus:ring-[#E94560]" />
                 </div>
                 <div className="space-y-2">

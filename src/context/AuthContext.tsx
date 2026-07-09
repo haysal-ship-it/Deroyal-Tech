@@ -1,4 +1,12 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { auth, db } from '../lib/firebase';
+import { 
+  signInWithEmailAndPassword, createUserWithEmailAndPassword, 
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 export type Role = 'Admin' | 'Sales Officer';
 export type AccessLevel = 'None' | 'View' | 'Full';
@@ -12,7 +20,7 @@ export interface Permissions {
 
 export interface User {
   uid: string;
-  username: string;
+  username: string; // we map this to email for Firebase
   name: string;
   role: Role;
   permissions: Permissions;
@@ -37,68 +45,108 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
+    // Setup initial admin if not exists
+    
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
-        // Setup initial admin if not exists
-        await fetch('/api/auth/setup', { method: 'POST' });
-        
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
+        if (firebaseUser) {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            setUser({ uid: firebaseUser.uid, ...userDoc.data() } as User);
+          } else {
+            // First time setup: create admin doc if it's the first user ever?
+            // Actually, if document doesn't exist, log them out or setup basic user doc.
+            // Setup initial admin if they match some condition, but here we just sign out
+            setUser(null);
+            await firebaseSignOut(auth);
+          }
         } else {
           setUser(null);
         }
       } catch (err) {
+        console.error(err);
         setUser(null);
       } finally {
         setLoading(false);
       }
-    };
-    initAuth();
+    });
+    
+    return () => unsubscribe();
   }, []);
 
   const login = async (username: string, password: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Login failed');
+      // In this app we used 'username', but firebase needs email. 
+      // If the user inputs 'admin', we map it to 'admin@example.com'.
+      let email = username;
+      if (!email.includes('@')) {
+         email = `${username}@example.com`;
       }
-      const data = await res.json();
-      setUser(data.user);
+      
+      let userCredential;
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      } catch (signInErr: any) {
+        if (signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/user-not-found') {
+          try {
+            userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          } catch (createErr: any) {
+             if (createErr.code === 'auth/operation-not-allowed') {
+                throw new Error("Email/Password authentication is not enabled. Please enable it in the Firebase Console (Authentication > Sign-in method).");
+             }
+             if (createErr.code === 'auth/weak-password') {
+                throw new Error("Password is too weak. Please use at least 6 characters (e.g., 'admin123').");
+             }
+             throw createErr;
+          }
+        } else {
+          throw signInErr;
+        }
+      }
+      
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      if (userDoc.exists()) {
+        setUser({ uid: userCredential.user.uid, ...userDoc.data() } as User);
+      } else {
+        // Just in case it's the very first login and they created account via console
+        const newUser: Omit<User, 'uid'> = {
+          username,
+          email,
+          name: username,
+          role: 'Admin', // Default to admin for first user setup
+          permissions: {
+            Dashboard: 'Full',
+            Sales: 'Full',
+            Repair: 'Full',
+            Settings: 'Full'
+          }
+        };
+        await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
+        setUser({ uid: userCredential.user.uid, ...newUser });
+      }
+      
+    } catch (err: any) {
+      console.error(err);
+      throw new Error(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
+    await firebaseSignOut(auth);
   };
 
   const updateUser = async (newData: Partial<User>) => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/users/${user.uid}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...user, ...newData })
-      });
-      if (res.ok) {
-        setUser({ ...user, ...newData });
-      } else {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to update user');
-      }
+      await updateDoc(doc(db, 'users', user.uid), newData as any);
+      setUser({ ...user, ...newData });
     } catch (err: any) {
       console.error(err);
-      throw err;
+      throw new Error(err.message || 'Failed to update user');
     }
   };
 

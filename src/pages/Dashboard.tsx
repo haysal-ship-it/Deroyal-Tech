@@ -1,6 +1,5 @@
 import { MOCK_KPI_DATA, RECENT_ACTIVITY } from "../data/mockData";
-import { Dollar01Icon, Wrench01Icon, CheckmarkCircle01Icon, Package01Icon, ArrowUp01Icon, ArrowDown01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "../components/HugeIcon";
+import { DollarSign, Wrench, CheckCircle2, Package, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
 import { PerformanceOverviewChart } from "../components/DashboardCharts";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
@@ -9,10 +8,10 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   const kpis = [
-    { label: "Today's Revenue", value: `$${MOCK_KPI_DATA.todayRevenue.toFixed(2)}`, delta: "12.5%", isPositive: true, icon: Dollar01Icon, subtext: "+$150 from yesterday" },
-    { label: "Open Repairs", value: MOCK_KPI_DATA.openRepairs, delta: "2.1%", isPositive: false, icon: Wrench01Icon, subtext: "-2 from yesterday" },
-    { label: "Completed Jobs", value: MOCK_KPI_DATA.completedJobs, delta: "4.0%", isPositive: true, icon: CheckmarkCircle01Icon, subtext: "92% goal reached" },
-    { label: "New Sales", value: MOCK_KPI_DATA.newSales, delta: "24.5%", isPositive: true, icon: Package01Icon, subtext: "Avg. $45 / sale" },
+    { label: "Today's Revenue", value: `$${MOCK_KPI_DATA.todayRevenue.toFixed(2)}`, delta: "12.5%", isPositive: true, icon: DollarSign, subtext: "+$150 from yesterday" },
+    { label: "Open Repairs", value: MOCK_KPI_DATA.openRepairs, delta: "2.1%", isPositive: false, icon: Wrench, subtext: "-2 from yesterday" },
+    { label: "Completed Jobs", value: MOCK_KPI_DATA.completedJobs, delta: "4.0%", isPositive: true, icon: CheckCircle2, subtext: "92% goal reached" },
+    { label: "New Sales", value: MOCK_KPI_DATA.newSales, delta: "24.5%", isPositive: true, icon: Package, subtext: "Avg. $45 / sale" },
   ];
 
   return (
@@ -30,14 +29,14 @@ export default function Dashboard() {
           <div key={idx} className="bg-white p-5 rounded-2xl border border-[#E5E5E5] shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 rounded-lg border border-[#E5E5E5] flex items-center justify-center text-[#6C5DD3] bg-[#F4F2FF]">
-                <HugeIcon icon={kpi.icon} className="w-4 h-4" />
+                <kpi.icon className="w-4 h-4" />
               </div>
               <p className="text-[14px] font-medium text-[#71717A]">{kpi.label}</p>
             </div>
             <div className="flex items-end gap-3 mb-5">
               <h2 className="text-2xl font-bold text-[#1A1A1A] leading-none">{kpi.value}</h2>
               <div className="flex items-center gap-0.5 mb-1">
-                {kpi.isPositive ? <HugeIcon icon={ArrowUp01Icon} className="w-3 h-3 text-[#10B981]" /> : <HugeIcon icon={ArrowDown01Icon} className="w-3 h-3 text-[#EF4444]" />}
+                {kpi.isPositive ? <ArrowUp className="w-3 h-3 text-[#10B981]" /> : <ArrowDown className="w-3 h-3 text-[#EF4444]" />}
                 <span className={cn("text-xs font-medium leading-none", kpi.isPositive ? "text-[#10B981]" : "text-[#EF4444]")}>
                   {kpi.delta}
                 </span>
@@ -45,7 +44,7 @@ export default function Dashboard() {
             </div>
             <div className="pt-3 mt-auto flex items-center justify-between border-t border-[#E5E5E5] hover:cursor-pointer group">
               <span className="text-[13px] text-[#71717A] group-hover:text-[#1A1A1A] transition-colors">{kpi.subtext}</span>
-              <HugeIcon icon={ArrowRight01Icon} className="w-4 h-4 text-[#A1A1AA] group-hover:text-[#1A1A1A] transition-colors" />
+              <ArrowRight className="w-4 h-4 text-[#A1A1AA] group-hover:text-[#1A1A1A] transition-colors" />
             </div>
           </div>
         ))}
@@ -74,9 +73,9 @@ export default function Dashboard() {
                     isIncoming ? "bg-[#EC4899]/10 text-[#EC4899]" : "bg-[#3B82F6]/10 text-[#3B82F6]"
                   )}>
                     {activity.type === "sale" ? (
-                      <HugeIcon icon={Package01Icon} className="w-5 h-5" />
+                      <Package className="w-5 h-5" />
                     ) : (
-                      <HugeIcon icon={Wrench01Icon} className="w-5 h-5" />
+                      <Wrench className="w-5 h-5" />
                     )}
                   </div>
                   <div>
