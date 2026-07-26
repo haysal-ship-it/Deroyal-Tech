@@ -25,7 +25,8 @@ service cloud.firestore {
     }
     match /sales/{saleId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn(); // Add more strict permission logic if required
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
     }
     match /repairs/{repairId} {
       allow read: if isSignedIn();

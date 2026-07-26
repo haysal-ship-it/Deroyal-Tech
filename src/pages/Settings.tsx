@@ -130,6 +130,46 @@ export default function Settings() {
               <div className="space-y-8 max-w-2xl">
                 <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] items-start gap-4">
                   <div className="text-sm font-medium text-gray-900 pt-2">
+                    Company Logo
+                    <span className="block text-gray-500 text-xs font-normal mt-0.5">Beside company name</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-4 mb-2">
+                        {brandingForm.sidebarLogoUrl ? (
+                          <img src={brandingForm.sidebarLogoUrl} alt="Logo" className="w-[60px] h-[60px] rounded-lg object-cover bg-gray-100 border border-gray-200" />
+                        ) : (
+                          <div className="w-[60px] h-[60px] rounded-lg bg-gray-200 border border-gray-200"></div>
+                        )}
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          handleFileUpload(e, 'sidebarLogoUrl');
+                        }}
+                      />
+                      <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-md hover:bg-gray-50 bg-white shadow-sm text-gray-700"
+                      >
+                        Upload logo
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setBrandingForm({...brandingForm, sidebarLogoUrl: ''});
+                        }}
+                        className="px-4 py-2 text-sm font-medium bg-red-50 text-red-600 rounded-md hover:bg-red-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <span className="text-[12px] text-gray-500">Jpeg, PNG or JPG. 1mb max</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] items-start gap-4">
+                  <div className="text-sm font-medium text-gray-900 pt-2">
                     Login Image
                     <span className="block text-gray-500 text-xs font-normal mt-0.5">Choose an image for the login page</span>
                   </div>
@@ -147,7 +187,6 @@ export default function Settings() {
                         accept="image/*"
                         onChange={(e) => {
                           handleFileUpload(e, 'loginImageUrl');
-                          setTimeout(() => handleSaveBranding(), 100);
                         }}
                       />
                       <button 
@@ -159,7 +198,6 @@ export default function Settings() {
                       <button 
                         onClick={() => {
                           setBrandingForm({...brandingForm, loginImageUrl: ''});
-                          setTimeout(() => handleSaveBranding(), 100);
                         }}
                         className="px-4 py-2 text-sm font-medium bg-red-50 text-red-600 rounded-md hover:bg-red-100"
                       >

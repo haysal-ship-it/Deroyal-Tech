@@ -1,13 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db } from "../lib/firebase";
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { Plus, Receipt, Pencil, MoreVertical, Eye } from "lucide-react";
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from "firebase/firestore";
+import { Plus, Receipt, Pencil, Eye, Trash2 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import InvoiceModal from "../components/InvoiceModal";
 import { cn } from "../lib/utils";
 import { CustomDropdown } from "../components/CustomDropdown";
 import { Headphones, Smartphone, Laptop, Settings, TriangleAlert, Layers, Clock, Calendar, Wallet, Filter } from "lucide-react";
 
 export default function Sales() {
+  const { user } = useAuth();
+  const formRef = useRef<HTMLFormElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [category, setCategory] = useState<string>("");
   const [invoiceFilter, setInvoiceFilter] = useState<string>("outstanding");
@@ -30,6 +34,18 @@ export default function Sales() {
     return unsub;
   }, []);
 
+  const handleDeleteSale = async (id: string) => {
+    if (user?.role !== 'Admin') return;
+    if (window.confirm('Are you sure you want to delete this invoice?')) {
+      try {
+        await deleteDoc(doc(db, "sales", id));
+      } catch (err) {
+        console.error(err);
+        alert("Error deleting sale");
+      }
+    }
+  };
+
   const handleRecordSale = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!itemName) return;
@@ -46,6 +62,7 @@ export default function Sales() {
       setItemName("");
       setQty(1);
       setPrice(0);
+      alert("Sale recorded successfully!");
     } catch (err) {
       console.error(err);
       alert("Error recording sale");
@@ -76,11 +93,14 @@ export default function Sales() {
           <p className="text-sm text-[#71717A] font-medium">Create invoices and view sales history.</p>
         </div>
         <div className="flex gap-4">
-          <button className="px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 text-[#1A1A1A]">
+          <button onClick={() => tableRef.current?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 text-[#1A1A1A]">
             <Receipt className="w-4 h-4" />
             View Invoices
           </button>
-          <button className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-black">
+          <button onClick={() => {
+            formRef.current?.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('itemName')?.focus();
+          }} className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-black">
             <Plus className="w-4 h-4" />
             New Sales Invoice
           </button>
@@ -92,7 +112,7 @@ export default function Sales() {
         <div className="bg-white p-5 rounded-2xl border border-[#E5E5E5] shadow-sm">
           <h2 className="text-sm font-semibold text-[#1A1A1A] mb-5">Record New Sale</h2>
           
-          <form onSubmit={handleRecordSale} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <form ref={formRef} onSubmit={handleRecordSale} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <div className="flex flex-col gap-1.5 lg:col-span-2">
               <label htmlFor="itemName" className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Item Name</label>
               <input id="itemName" type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} required className="h-10 px-3 rounded-lg border border-[#E5E5E5] text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] placeholder:text-[#A1A1AA]" placeholder="e.g. iPhone 14 Case" />
@@ -145,7 +165,7 @@ export default function Sales() {
         </div>
 
         {/* Sales Table Box */}
-        <div className="bg-white rounded-[24px] border border-[#E5E5E5] shadow-sm flex flex-col">
+        <div ref={tableRef} className="bg-white rounded-[24px] border border-[#E5E5E5] shadow-sm flex flex-col">
           <div className="px-6 py-4 border-b border-[#E5E5E5] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-[20px] font-bold text-[#1A1A1A]">Invoices</h2>
             <div className="flex items-center gap-2">
@@ -206,9 +226,15 @@ export default function Sales() {
                         <button className="hover:text-[#1A1A1A]">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button className="hover:text-[#1A1A1A]">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
+                        {user?.role === 'Admin' && (
+                          <button 
+                            onClick={() => handleDeleteSale(sale.id)}
+                            className="hover:text-red-600 text-gray-400 transition-colors"
+                            title="Delete Invoice"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

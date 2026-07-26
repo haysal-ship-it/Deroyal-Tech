@@ -48,6 +48,7 @@ export default function Repairs() {
       setIssue("");
       setCost(0);
       setJobStatus("Pending");
+      alert("Job logged successfully!");
     } catch (err) {
       console.error(err);
       alert("Error logging job");
