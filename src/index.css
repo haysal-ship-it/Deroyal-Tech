@@ -14,13 +14,20 @@
 }
 
 @media print {
+  @page {
+    margin: 1cm;
+  }
+  
   body * {
     visibility: hidden;
   }
-  #invoice-print-area, #invoice-print-area * {
+  
+  #invoice-print-area, #invoice-print-area *,
+  #repair-print-area, #repair-print-area * {
     visibility: visible;
   }
-  #invoice-print-area {
+  
+  #invoice-print-area, #repair-print-area {
     position: absolute;
     left: 0;
     top: 0;
@@ -28,5 +35,13 @@
     margin: 0;
     padding: 0;
   }
-}
 
+  /* Critical fixes to prevent clipping in SPAs */
+  html, body, #root, [class*="fixed"], [class*="absolute"], [class*="overflow-hidden"], [class*="overflow-y-auto"], main, aside, header {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    transform: none !important;
+  }
+}

@@ -1,7 +1,8 @@
+import { createPortal } from "react-dom";
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { db } from "../lib/firebase";
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from "firebase/firestore";
-import { Plus, Receipt, Pencil, Eye, Trash2 } from "lucide-react";
+import { collection, addDoc, runTransaction, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from "firebase/firestore";
+import { Plus, Receipt, Pencil, Eye, Trash2, MoreVertical, AlertTriangle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import InvoiceModal from "../components/InvoiceModal";
 import { cn } from "../lib/utils";
@@ -13,6 +14,8 @@ export default function Sales() {
   const formRef = useRef<HTMLFormElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [dropdownConfig, setDropdownConfig] = useState<{ id: string, top: number, right: number } | null>(null);
+  const [deletingSaleId, setDeletingSaleId] = useState<string | null>(null);
   const [category, setCategory] = useState<string>("");
   const [invoiceFilter, setInvoiceFilter] = useState<string>("outstanding");
 
@@ -21,6 +24,24 @@ export default function Sales() {
   const [price, setPrice] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("Card");
   const [sales, setSales] = useState<any[]>([]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.action-dropdown-container') && !(e.target as Element).closest('.portal-dropdown')) {
+        setDropdownConfig(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    const handleScroll = () => setDropdownConfig(null);
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleScroll);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, "sales"), orderBy("createdAt", "desc"));
@@ -34,15 +55,20 @@ export default function Sales() {
     return unsub;
   }, []);
 
-  const handleDeleteSale = async (id: string) => {
+  const handleDeleteSale = (id: string) => {
     if (user?.role !== 'Admin') return;
-    if (window.confirm('Are you sure you want to delete this invoice?')) {
-      try {
-        await deleteDoc(doc(db, "sales", id));
-      } catch (err) {
-        console.error(err);
-        alert("Error deleting sale");
-      }
+    setDeletingSaleId(id);
+    setDropdownConfig(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingSaleId) return;
+    try {
+      await deleteDoc(doc(db, "sales", deletingSaleId));
+      setDeletingSaleId(null);
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting sale");
     }
   };
 
@@ -50,19 +76,30 @@ export default function Sales() {
     e.preventDefault();
     if (!itemName) return;
     try {
-      await addDoc(collection(db, "sales"), {
-        item: itemName,
-        category: category || "Accessories",
-        qty: Number(qty),
-        amount: Number(qty) * Number(price),
-        paymentMethod,
-        date: new Date().toISOString().split('T')[0], // yyyy-mm-dd
-        createdAt: serverTimestamp()
+      await runTransaction(db, async (transaction) => {
+        const counterRef = doc(db, "counters", "sales");
+        const counterSnap = await transaction.get(counterRef);
+        let nextCount = 1;
+        if (counterSnap.exists()) {
+          nextCount = (counterSnap.data().count || 0) + 1;
+        }
+        const invoiceId = `INV-${String(nextCount).padStart(5, '0')}`;
+        const newSaleRef = doc(db, "sales", invoiceId);
+
+        transaction.set(counterRef, { count: nextCount });
+        transaction.set(newSaleRef, {
+          item: itemName,
+          category: category || "Accessories",
+          qty: Number(qty),
+          amount: Number(qty) * Number(price),
+          paymentMethod,
+          date: new Date().toISOString().split('T')[0],
+          createdAt: serverTimestamp()
+        });
       });
       setItemName("");
       setQty(1);
       setPrice(0);
-      alert("Sale recorded successfully!");
     } catch (err) {
       console.error(err);
       alert("Error recording sale");
@@ -85,7 +122,7 @@ export default function Sales() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full h-full pb-[40px]">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full">
       {/* Header section with Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
@@ -215,25 +252,40 @@ export default function Sales() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-3 text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => setSelectedInvoice(sale)}
-                          className="hover:text-[#1A1A1A]"
-                          title="View Invoice"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                      <div className="flex items-center justify-end gap-3 text-[#A1A1AA] transition-opacity relative action-dropdown-container">
                         <button className="hover:text-[#1A1A1A]">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        {user?.role === 'Admin' && (
-                          <button 
-                            onClick={() => handleDeleteSale(sale.id)}
-                            className="hover:text-red-600 text-gray-400 transition-colors"
-                            title="Delete Invoice"
+                        <button 
+                          onClick={(e) => { 
+                            const rect = e.currentTarget.getBoundingClientRect(); 
+                            setDropdownConfig(dropdownConfig?.id === sale.id ? null : { id: sale.id, top: rect.bottom + window.scrollY, right: window.innerWidth - rect.right }); 
+                          }} 
+                          className="hover:text-[#1A1A1A]"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {dropdownConfig?.id === sale.id && createPortal(
+                          <div 
+                            className="fixed z-[9999] w-36 bg-white border border-[#E5E5E5] rounded-xl shadow-lg overflow-hidden portal-dropdown"
+                            style={{ top: dropdownConfig.top + 4, right: dropdownConfig.right }}
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            <button 
+                              onClick={() => { setSelectedInvoice(sale); setDropdownConfig(null); }}
+                              className="w-full text-left px-4 py-2 text-sm text-[#1A1A1A] hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" /> View Invoice
+                            </button>
+                            {user?.role === 'Admin' && (
+                              <button 
+                                onClick={() => handleDeleteSale(sale.id)}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete
+                              </button>
+                            )}
+                          </div>,
+                          document.body
                         )}
                       </div>
                     </td>
@@ -247,6 +299,33 @@ export default function Sales() {
       
       {selectedInvoice && (
         <InvoiceModal invoice={selectedInvoice} onClose={() => setSelectedInvoice(null)} />
+      )}
+      {deletingSaleId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl overflow-hidden flex flex-col p-6 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
+            <h3 className="text-lg font-bold text-[#1A1A1A] mb-2">Delete Invoice</h3>
+            <p className="text-sm text-[#71717A] mb-6">
+              Are you sure you want to delete this invoice? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 w-full">
+              <button 
+                onClick={() => setDeletingSaleId(null)}
+                className="flex-1 h-10 flex items-center justify-center bg-white border border-[#E5E5E5] text-[#1A1A1A] text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="flex-1 h-10 flex items-center justify-center bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

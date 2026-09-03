@@ -97,7 +97,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full pb-[40px]">
+    <div className="flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-[22px] sm:text-[24px] font-bold text-[#1A1A1A] mb-1 leading-tight flex flex-wrap items-center gap-2"><span className="truncate max-w-[200px] sm:max-w-[400px]">Hi, {user?.name?.split(' ')[0] || user?.username || 'User'}</span> <span className="text-xl shrink-0">👋</span></h1>

@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { db } from "../lib/firebase";
 import { collection, runTransaction, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { Plus, Pencil, MoreVertical, Trash2, Eye, X, Check } from "lucide-react";
@@ -14,13 +15,13 @@ export default function Repairs() {
   const { user } = useAuth();
   const [viewingRepair, setViewingRepair] = useState<any>(null);
   const [editingRepair, setEditingRepair] = useState<any>(null);
-  const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+  const [dropdownConfig, setDropdownConfig] = useState<{ id: string, top: number, right: number } | null>(null);
   const [deletingRepairId, setDeletingRepairId] = useState<string | null>(null);
   
   const handleDeleteRepair = (id: string) => {
     if (user?.role !== 'Admin') return;
     setDeletingRepairId(id);
-    setDropdownOpenId(null);
+    setDropdownConfig(null);
   };
 
   const confirmDelete = async () => {
@@ -46,12 +47,19 @@ export default function Repairs() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.action-dropdown-container')) {
-        setDropdownOpenId(null);
+      if (!(e.target as Element).closest('.action-dropdown-container') && !(e.target as Element).closest('.portal-dropdown')) {
+        setDropdownConfig(null);
       }
     };
     document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    const handleScroll = () => setDropdownConfig(null);
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleScroll);
+    };
   }, []);
 
   const [activeTab, setActiveTab] = useState("All");
@@ -141,7 +149,7 @@ export default function Repairs() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full h-full pb-[40px]">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full">
       {/* Header section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
@@ -258,15 +266,18 @@ export default function Repairs() {
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button 
-                          onClick={() => setDropdownOpenId(dropdownOpenId === repair.id ? null : repair.id)} 
+                          onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); setDropdownConfig(dropdownConfig?.id === repair.id ? null : { id: repair.id, top: rect.bottom + window.scrollY, right: window.innerWidth - rect.right }); }} 
                           className="hover:text-[#1A1A1A]"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
-                        {dropdownOpenId === repair.id && (
-                          <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-[#E5E5E5] rounded-xl shadow-lg z-50 overflow-hidden">
+                        {dropdownConfig?.id === repair.id && createPortal(
+                          <div 
+                            className="fixed z-[9999] w-36 bg-white border border-[#E5E5E5] rounded-xl shadow-lg overflow-hidden portal-dropdown"
+                            style={{ top: dropdownConfig.top + 4, right: dropdownConfig.right }}
+                          >
                             <button 
-                              onClick={() => { setViewingRepair(repair); setDropdownOpenId(null); }}
+                              onClick={() => { setViewingRepair(repair); setDropdownConfig(null); }}
                               className="w-full text-left px-4 py-2 text-sm text-[#1A1A1A] hover:bg-gray-50 flex items-center gap-2"
                             >
                               <Eye className="w-4 h-4" /> Full view
@@ -279,7 +290,8 @@ export default function Repairs() {
                                 <Trash2 className="w-4 h-4" /> Delete
                               </button>
                             )}
-                          </div>
+                          </div>,
+                          document.body
                         )}
                       </div>
                     </td>

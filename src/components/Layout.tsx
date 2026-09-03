@@ -195,7 +195,7 @@ export default function Layout() {
         </header>
 
         {/* Scrollable Page Content */}
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 w-full">
+        <main className="flex-1 overflow-y-auto px-4 pt-6 pb-16 sm:px-8 sm:pt-8 w-full">
           <Outlet />
         </main>
       </div>
