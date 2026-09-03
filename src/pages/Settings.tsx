@@ -92,13 +92,13 @@ export default function Settings() {
 
       {/* Horizontal Tabs */}
       <div className="mb-8 w-full flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0">
-        <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
+        <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto whitespace-nowrap hide-scrollbar">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "px-6 py-2.5 text-sm font-semibold transition-all rounded-lg flex-1 sm:flex-none",
+                "px-6 py-3 sm:py-2.5 text-sm font-semibold transition-all rounded-lg flex-1 sm:flex-none",
                 activeTab === tab.id
                   ? "bg-white text-[#1A1A1A] shadow-sm"
                   : "text-gray-500 hover:text-gray-900"
@@ -111,7 +111,7 @@ export default function Settings() {
         <button 
           onClick={() => handleSaveBranding()}
           disabled={isSaving || activeTab !== 'branding'}
-          className={cn("bg-[#0561FC] hover:shadow-[0_0_15px_rgba(5,97,252,0.5)] text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto", (isSaving || activeTab !== 'branding') ? "opacity-50 cursor-not-allowed hover:shadow-none" : "")}
+          className={cn("bg-[#0561FC] hover:shadow-[0_0_15px_rgba(5,97,252,0.5)] text-white px-6 py-3 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto", (isSaving || activeTab !== 'branding') ? "opacity-50 cursor-not-allowed hover:shadow-none" : "")}
         >
           {isSaving && <Loader2 size={16} className="animate-spin" />}
           Save Changes

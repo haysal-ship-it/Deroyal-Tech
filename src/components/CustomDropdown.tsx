@@ -62,7 +62,7 @@ export function CustomDropdown({ options, value, onChange, placeholder = "Select
       </button>
 
       {isOpen && (
-        <div className={cn("absolute z-50 top-full mt-2 w-full min-w-[220px] bg-white rounded-2xl shadow-[0_12px_40px_rgb(0,0,0,0.12)] border border-[#E5E5E5] p-2 animate-in fade-in slide-in-from-top-2 duration-200", dropdownClassName)}>
+        <div className={cn("absolute z-50 top-full mt-2 w-full sm:min-w-[220px] bg-white rounded-2xl shadow-[0_12px_40px_rgb(0,0,0,0.12)] border border-[#E5E5E5] p-2 animate-in fade-in slide-in-from-top-2 duration-200", dropdownClassName)}>
           <div className="flex flex-col gap-1">
             {options.map((option) => {
               const isSelected = option.value === value;

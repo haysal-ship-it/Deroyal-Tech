@@ -34,8 +34,8 @@ export default function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
         </div>
 
         {/* Printable Area */}
-        <div id="invoice-print-area" className="p-8 overflow-y-auto print:overflow-visible">
-          <div className="flex justify-between items-start mb-8">
+        <div id="invoice-print-area" className="p-4 sm:p-8 overflow-y-auto print:overflow-visible">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-[#1A1A1A] rounded-lg flex items-center justify-center">
@@ -47,7 +47,7 @@ export default function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
               <p className="text-sm text-[#71717A]">San Francisco, CA 94105</p>
               <p className="text-sm text-[#71717A]">contact@deroyaltech.com</p>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <h2 className="text-2xl font-bold text-[#1A1A1A] uppercase tracking-wider mb-2">Invoice</h2>
               <p className="text-sm font-medium text-[#1A1A1A]">#{invoice.id}</p>
               <p className="text-sm text-[#71717A] mt-1">Date: {invoice.date}</p>

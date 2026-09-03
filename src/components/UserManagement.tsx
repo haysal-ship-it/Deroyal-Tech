@@ -121,15 +121,15 @@ export default function UserManagement() {
       {editingUser && (
         <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
+            <div className="p-4 sm:p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
               <h3 className="text-lg font-semibold text-gray-900">{editingUser.isNew ? 'Create New User' : 'Edit User'}</h3>
               <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600">
                 <X size={20} />
               </button>
             </div>
             
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 sm:p-6 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Username / Email</label>
                   <input type="text" value={editingUser.username || ''} onChange={e => setEditingUser({...editingUser, username: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#0561FC] focus:ring-1 focus:ring-[#0561FC]" />
@@ -153,7 +153,7 @@ export default function UserManagement() {
 
               <div>
                 <h4 className="text-sm font-medium mb-3 pb-2 border-b border-gray-100 text-gray-900">Module Permissions</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {['Dashboard', 'Sales', 'Repair', 'Settings'].map(mod => (
                     <div key={mod} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
                       <span className="text-sm font-medium text-gray-700">{mod}</span>
@@ -175,7 +175,7 @@ export default function UserManagement() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+            <div className="p-4 sm:p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
               <button onClick={() => setEditingUser(null)} className="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-md font-medium text-sm hover:bg-gray-100">Cancel</button>
               <button onClick={handleSave} className="px-4 py-2 bg-[#0561FC] text-white rounded-md font-medium text-sm flex items-center gap-2 hover:shadow-[0_0_15px_rgba(5,97,252,0.3)]">
                 <Save size={16} /> Save User

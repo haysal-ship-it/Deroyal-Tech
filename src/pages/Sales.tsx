@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { db } from "../lib/firebase";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from "firebase/firestore";
 import { Plus, Receipt, Pencil, Eye, Trash2 } from "lucide-react";
@@ -46,7 +46,7 @@ export default function Sales() {
     }
   };
 
-  const handleRecordSale = async (e: React.FormEvent) => {
+  const handleRecordSale = async (e: FormEvent) => {
     e.preventDefault();
     if (!itemName) return;
     try {
@@ -87,20 +87,20 @@ export default function Sales() {
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full h-full pb-[40px]">
       {/* Header section with Actions */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-xl font-semibold text-[#1A1A1A] mb-1">Sales</h1>
           <p className="text-sm text-[#71717A] font-medium">Create invoices and view sales history.</p>
         </div>
-        <div className="flex gap-4">
-          <button onClick={() => tableRef.current?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 text-[#1A1A1A]">
+        <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4 w-full sm:w-auto">
+          <button onClick={() => tableRef.current?.scrollIntoView({ behavior: 'smooth' })} className="flex-1 sm:flex-none justify-center px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 text-[#1A1A1A]">
             <Receipt className="w-4 h-4" />
             View Invoices
           </button>
           <button onClick={() => {
             formRef.current?.scrollIntoView({ behavior: 'smooth' });
             document.getElementById('itemName')?.focus();
-          }} className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-black">
+          }} className="flex-1 sm:flex-none justify-center px-4 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-black">
             <Plus className="w-4 h-4" />
             New Sales Invoice
           </button>
@@ -143,21 +143,21 @@ export default function Sales() {
 
             <div className="flex flex-col gap-1.5 lg:col-span-3">
               <label className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Payment Method</label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {['Card', 'Cash', 'Transfer'].map((method) => (
-                  <button key={method} type="button" onClick={() => setPaymentMethod(method)} className={`h-10 px-6 border rounded-lg text-sm font-medium transition-colors ${paymentMethod === method ? 'border-[#1A1A1A] bg-[#1A1A1A] text-white' : 'border-[#E5E5E5] text-[#1A1A1A] hover:bg-[#F5F5F5]'}`}>
+                  <button key={method} type="button" onClick={() => setPaymentMethod(method)} className={`flex-1 sm:flex-none h-10 px-4 sm:px-6 border rounded-lg text-sm font-medium transition-colors ${paymentMethod === method ? 'border-[#1A1A1A] bg-[#1A1A1A] text-white' : 'border-[#E5E5E5] text-[#1A1A1A] hover:bg-[#F5F5F5]'}`}>
                     {method}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="lg:col-span-2 flex items-end justify-between lg:justify-end gap-6">
+            <div className="lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-end justify-between lg:justify-end gap-4 sm:gap-6 mt-2">
               <div className="flex flex-col mb-1 lg:mb-0 lg:text-right">
                 <span className="text-xs font-medium text-[#71717A] uppercase tracking-wider">Total</span>
                 <span className="text-2xl font-bold text-[#1A1A1A] mt-1">₦{(Number(qty) * Number(price)).toFixed(2)}</span>
               </div>
-              <button type="submit" className="h-10 px-6 bg-[#1A1A1A] text-white text-sm font-medium rounded-lg hover:bg-black transition-colors whitespace-nowrap">
+              <button type="submit" className="w-full sm:w-auto h-10 px-6 bg-[#1A1A1A] text-white text-sm font-medium rounded-lg hover:bg-black transition-colors whitespace-nowrap">
                 Record Sale
               </button>
             </div>
@@ -183,7 +183,7 @@ export default function Sales() {
             </div>
           </div>
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-[13px] text-[#1A1A1A]">
+            <table className="w-full text-left text-[13px] text-[#1A1A1A] min-w-[800px]">
               <thead className="text-[#8B8D97] font-medium border-b border-[#E5E5E5]">
                 <tr>
                   <th className="px-6 py-4 w-12 font-normal"><input type="checkbox" className="w-4 h-4 rounded border-[#D1D1D1] text-[#1A1A1A] focus:ring-black" /></th>

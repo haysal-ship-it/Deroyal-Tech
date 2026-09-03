@@ -51,6 +51,42 @@ export default function Dashboard() {
       date: new Date(a.createdAt.toDate()).toLocaleString(),
       amount: a._type === 'sale' ? Number(a.amount) : Number(a.cost)
     }));
+  // Generate last 7 days chart data
+  const last7Days = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d;
+  });
+
+  const chartData = last7Days.map(date => {
+    // We match by local YYYY-MM-DD
+    const dateStr = date.toISOString().split('T')[0];
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const fullDate = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+
+    const daySales = sales.filter(s => {
+      if (s.createdAt) return new Date(s.createdAt.toDate()).toISOString().split('T')[0] === dateStr;
+      return s.date === dateStr;
+    });
+
+    const dayRepairs = repairs.filter(r => {
+      if (r.createdAt) return new Date(r.createdAt.toDate()).toISOString().split('T')[0] === dateStr;
+      return false;
+    });
+
+    const totalSalesCount = daySales.length + dayRepairs.length;
+    const totalSalesRev = daySales.reduce((acc, s) => acc + (Number(s.amount) || 0), 0);
+    const totalRepairRev = dayRepairs.reduce((acc, r) => acc + (Number(r.cost) || 0), 0);
+    const totalRevenue = totalSalesRev + totalRepairRev;
+
+    return {
+      name: dayName,
+      date: fullDate,
+      sales: totalSalesCount,
+      revenue: totalRevenue
+    };
+  });
+
   const { user } = useAuth();
 
   const kpis = [
@@ -64,7 +100,7 @@ export default function Dashboard() {
     <div className="flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full pb-[40px]">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-[22px] sm:text-[24px] font-bold text-[#1A1A1A] mb-1">Hi, {user?.name?.split(' ')[0] || user?.username || 'User'} <span className="text-xl">👋</span></h1>
+          <h1 className="text-[22px] sm:text-[24px] font-bold text-[#1A1A1A] mb-1 leading-tight flex flex-wrap items-center gap-2"><span className="truncate max-w-[200px] sm:max-w-[400px]">Hi, {user?.name?.split(' ')[0] || user?.username || 'User'}</span> <span className="text-xl shrink-0">👋</span></h1>
           <p className="text-[14px] text-[#A1A1AA] font-medium">Let's look the overview here.</p>
         </div>
       </div>
@@ -98,7 +134,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 items-start">
         <div className="w-full">
-          <PerformanceOverviewChart />
+          <PerformanceOverviewChart data={chartData} />
         </div>
       </div>
 
