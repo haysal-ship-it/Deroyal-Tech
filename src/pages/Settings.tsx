@@ -20,25 +20,22 @@ import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { cn } from "../lib/utils";
 import UserManagement from "../components/UserManagement";
+import ActivityLog from "../components/ActivityLog";
 
 export default function Settings() {
   const { user, updateUser } = useAuth();
   const { config, updateConfig, resetToDefault } = useConfig();
   const [activeTab, setActiveTab] = useState("users");
-  
-  if (user?.permissions?.Settings !== 'Full') {
-    return <Navigate to="/" replace />;
-  }
-
-  // State for form edits
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{type: 'success' | 'error', message: string} | null>(null);
-
-  // Local state for forms to avoid instant updates to context
   const [brandingForm, setBrandingForm] = useState(config);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loginBgInputRef = useRef<HTMLInputElement>(null);
+
+  if (user?.role !== 'Admin' || user?.permissions?.Settings !== 'Full') {
+    return <Navigate to="/" replace />;
+  }
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message });
@@ -75,6 +72,7 @@ export default function Settings() {
   const TABS = [
     ...(user?.role === 'Admin' ? [{ id: "users", label: "User Management" }] : []),
     ...(user?.role === 'Admin' ? [{ id: "branding", label: "App Branding" }] : []),
+    ...(user?.role === 'Admin' ? [{ id: "activity", label: "Activity Log" }] : []),
   ];
 
   return (
@@ -108,14 +106,16 @@ export default function Settings() {
             </button>
           ))}
         </div>
-        <button 
-          onClick={() => handleSaveBranding()}
-          disabled={isSaving || activeTab !== 'branding'}
-          className={cn("bg-[#0561FC] hover:shadow-[0_0_15px_rgba(5,97,252,0.5)] text-white px-6 py-3 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto", (isSaving || activeTab !== 'branding') ? "opacity-50 cursor-not-allowed hover:shadow-none" : "")}
-        >
-          {isSaving && <Loader2 size={16} className="animate-spin" />}
-          Save Changes
-        </button>
+        {activeTab === 'branding' && (
+          <button 
+            onClick={() => handleSaveBranding()}
+            disabled={isSaving}
+            className={cn("bg-[#0561FC] hover:shadow-[0_0_15px_rgba(5,97,252,0.5)] text-white px-6 py-3 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto", isSaving ? "opacity-50 cursor-not-allowed hover:shadow-none" : "")}
+          >
+            {isSaving && <Loader2 size={16} className="animate-spin" />}
+            Save Changes
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto w-full max-w-4xl">
@@ -229,8 +229,14 @@ export default function Settings() {
           </div>
         )}
 
+        {activeTab === "activity" && user?.role === 'Admin' && (
+          <div className="pl-4">
+            <ActivityLog />
+          </div>
+        )}
+
         {/* Placeholder for other tabs */}
-        {!["branding", "users"].includes(activeTab) && (
+        {!["branding", "users", "activity"].includes(activeTab) && (
           <div className="flex flex-col items-center justify-center p-12 text-center h-64">
             <h2 className="text-lg font-bold text-gray-900">Section: {TABS.find(t => t.id === activeTab)?.label}</h2>
             <p className="text-sm text-gray-500 mt-2">This section is currently under development.</p>

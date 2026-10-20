@@ -2,11 +2,11 @@ import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
 import { Navigate } from 'react-router-dom';
 import { useState, FormEvent } from 'react';
+import { getFirstAllowedRoute } from '../components/ProtectedRoute';
 
 export default function Login() {
   const { user, login, loading } = useAuth();
   const { config } = useConfig();
-  const [role, setRole] = useState<'admin' | 'sales'>('admin');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +21,7 @@ export default function Login() {
   }
 
   if (user) {
-    return <Navigate to={user.role === 'Admin' ? '/' : '/sales'} replace />;
+    return <Navigate to={getFirstAllowedRoute(user)} replace />;
   }
 
   const handleLogin = async (e: FormEvent) => {

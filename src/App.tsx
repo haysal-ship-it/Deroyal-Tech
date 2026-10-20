@@ -6,39 +6,44 @@ import Repairs from "./pages/Repairs";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import { ConfigProvider } from "./context/ConfigContext";
-
-function RootRedirect() {
-  const { user } = useAuth();
-  if (user?.permissions?.Dashboard === 'None') {
-    return <Navigate to="/sales" replace />;
-  }
-  return <Dashboard />;
-}
+import { ToastProvider } from "./context/ToastContext";
+import { SearchProvider } from "./context/SearchContext";
 
 export default function App() {
   return (
     <ConfigProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<RootRedirect />} />
-                <Route path="sales" element={<Sales />} />
-                <Route path="repairs" element={<Repairs />} />
+        <ToastProvider>
+          <SearchProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<Login />} />
                 
-                {/* Admin only routes */}
-                <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
-                  <Route path="settings" element={<Settings />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/" element={<Layout />}>
+                    <Route element={<ProtectedRoute requiredPermission={{ module: 'Dashboard' }} />}>
+                      <Route index element={<Dashboard />} />
+                    </Route>
+                    <Route element={<ProtectedRoute requiredPermission={{ module: 'Sales' }} />}>
+                      <Route path="sales" element={<Sales />} />
+                    </Route>
+                    <Route element={<ProtectedRoute requiredPermission={{ module: 'Repair' }} />}>
+                      <Route path="repairs" element={<Repairs />} />
+                    </Route>
+                    
+                    {/* Admin only routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['Admin']} requiredPermission={{ module: 'Settings', minLevel: 'Full' }} />}>
+                      <Route path="settings" element={<Settings />} />
+                    </Route>
+                  </Route>
                 </Route>
-              </Route>
-            </Route>
-          </Routes>
-        </BrowserRouter>
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </SearchProvider>
+        </ToastProvider>
       </AuthProvider>
     </ConfigProvider>
   );

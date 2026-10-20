@@ -1,14 +1,13 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { auth, db } from '../lib/firebase';
 import { 
-  signInWithEmailAndPassword, createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
   signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User as FirebaseUser
+  onAuthStateChanged
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
-export type Role = 'Admin' | 'Sales Officer';
+export type Role = 'Admin' | 'Manager' | 'Sales Officer' | 'Technician';
 export type AccessLevel = 'None' | 'View' | 'Full';
 
 export interface Permissions {
@@ -18,16 +17,48 @@ export interface Permissions {
   Settings: AccessLevel;
 }
 
+export const ROLE_PERMISSION_TEMPLATES: Record<Role, Permissions> = {
+  'Admin': {
+    Dashboard: 'Full',
+    Sales: 'Full',
+    Repair: 'Full',
+    Settings: 'Full'
+  },
+  'Manager': {
+    Dashboard: 'Full',
+    Sales: 'Full',
+    Repair: 'Full',
+    Settings: 'View'
+  },
+  'Sales Officer': {
+    Dashboard: 'View',
+    Sales: 'Full',
+    Repair: 'View',
+    Settings: 'None'
+  },
+  'Technician': {
+    Dashboard: 'View',
+    Sales: 'None',
+    Repair: 'Full',
+    Settings: 'None'
+  }
+};
+
 export interface User {
   uid: string;
-  username: string; // we map this to email for Firebase
+  username: string;
   name: string;
   role: Role;
   permissions: Permissions;
+  active: boolean;
   email?: string;
+  authEmail?: string;
   phone?: string;
   bio?: string;
   avatarUrl?: string;
+  createdAt?: any;
+  lastLogin?: any;
+  mustChangePassword?: boolean;
 }
 
 interface AuthContextType {
@@ -36,6 +67,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (newData: Partial<User>) => Promise<void>;
+  getIdToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,19 +77,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Setup initial admin if not exists
-    
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            setUser({ uid: firebaseUser.uid, ...userDoc.data() } as User);
+          if (userDoc.exists() && userDoc.data()?.active !== false) {
+            const data = userDoc.data();
+            // Provide role template fallback if missing
+            const role = (data.role as Role) || 'Sales Officer';
+            const permissions = data.permissions || ROLE_PERMISSION_TEMPLATES[role] || ROLE_PERMISSION_TEMPLATES['Sales Officer'];
+            
+            setUser({ 
+              uid: firebaseUser.uid, 
+              active: data.active ?? true, 
+              ...data,
+              role,
+              permissions,
+              mustChangePassword: !!data.mustChangePassword
+            } as User);
           } else {
-            // First time setup: create admin doc if it's the first user ever?
-            // Actually, if document doesn't exist, log them out or setup basic user doc.
-            // Setup initial admin if they match some condition, but here we just sign out
             setUser(null);
             await firebaseSignOut(auth);
           }
@@ -65,8 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Auth state error:", err);
         setUser(null);
+        await firebaseSignOut(auth);
       } finally {
         setLoading(false);
       }
@@ -75,66 +114,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const getIdToken = async (): Promise<string | null> => {
+    if (!auth.currentUser) return null;
+    return await auth.currentUser.getIdToken();
+  };
+
+  const login = async (usernameInput: string, passwordInput: string) => {
     setLoading(true);
     try {
-      // In this app we used 'username', but firebase needs email. 
-      // If the user inputs 'admin', we map it to 'admin@example.com'.
-      let email = username;
-      if (!email.includes('@')) {
-         email = `${username}@example.com`;
+      const cleanUsername = usernameInput.trim().toLowerCase();
+      if (!cleanUsername) {
+        throw new Error("Please enter your username.");
       }
-      
-      let userCredential;
-      try {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
-      } catch (signInErr: any) {
-        if (signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/user-not-found') {
-          try {
-            userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          } catch (createErr: any) {
-             if (createErr.code === 'auth/operation-not-allowed') {
-                throw new Error("Email/Password authentication is not enabled. Please enable it in the Firebase Console (Authentication > Sign-in method).");
-             }
-             if (createErr.code === 'auth/weak-password') {
-                throw new Error("Password is too weak. Please use at least 6 characters (e.g., 'admin123').");
-             }
-             throw createErr;
-          }
-        } else {
-          throw signInErr;
-        }
+      if (!passwordInput) {
+        throw new Error("Please enter your password.");
       }
-      
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        // Fallback for missing permissions
-        if (!data.permissions && data.role === 'Admin') {
-          data.permissions = { Dashboard: 'Full', Sales: 'Full', Repair: 'Full', Settings: 'Full' };
-        }
-        setUser({ uid: userCredential.user.uid, ...data } as User);
+
+      // Step 1: Generate candidate email addresses for Firebase Auth
+      const candidates: string[] = [];
+      if (cleanUsername.includes('@')) {
+        candidates.push(cleanUsername);
       } else {
-        // Just in case it's the very first login and they created account via console
-        const newUser: Omit<User, 'uid'> = {
-          username,
-          email,
-          name: username,
-          role: 'Admin', // Default to admin for first user setup
-          permissions: {
-            Dashboard: 'Full',
-            Sales: 'Full',
-            Repair: 'Full',
-            Settings: 'Full'
-          }
-        };
-        await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
-        setUser({ uid: userCredential.user.uid, ...newUser });
+        candidates.push(`${cleanUsername}@${auth.app.options.authDomain || 'internal.app'}`);
+        candidates.push(`${cleanUsername}@example.com`);
       }
+
+      // Step 2: Sign in with Firebase Auth using candidate email and password
+      let userCredential = null;
+      for (const emailCandidate of candidates) {
+        try {
+          userCredential = await signInWithEmailAndPassword(auth, emailCandidate, passwordInput);
+          if (userCredential) break;
+        } catch (err: any) {
+          // Continue to next candidate if not found
+        }
+      }
+
+      if (!userCredential) {
+        throw new Error("Invalid username or password");
+      }
+
+      // Step 3: Verify user document in Firestore and check active status
+      let userDoc;
+      try {
+        userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      } catch (docErr: any) {
+        await firebaseSignOut(auth);
+        setUser(null);
+        throw new Error("Your account is not active. Contact an administrator.");
+      }
+
+      if (!userDoc.exists() || userDoc.data()?.active === false) {
+        await firebaseSignOut(auth);
+        setUser(null);
+        throw new Error("Your account is not active. Contact an administrator.");
+      }
+
+      const data = userDoc.data();
+      const role = (data.role as Role) || 'Sales Officer';
+      const permissions = data.permissions || ROLE_PERMISSION_TEMPLATES[role] || ROLE_PERMISSION_TEMPLATES['Sales Officer'];
+
+      // Record login in background
+      try {
+        const token = await userCredential.user.getIdToken();
+        fetch('/api/auth/record-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }).catch(() => {});
+      } catch (_) {}
+
+      setUser({ 
+        uid: userCredential.user.uid, 
+        active: data.active ?? true, 
+        ...data,
+        role,
+        permissions,
+        mustChangePassword: !!data.mustChangePassword
+      } as User);
       
     } catch (err: any) {
       console.error(err);
-      throw new Error(err.message || 'Login failed');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -142,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await firebaseSignOut(auth);
+    setUser(null);
   };
 
   const updateUser = async (newData: Partial<User>) => {
@@ -156,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser, getIdToken }}>
       {children}
     </AuthContext.Provider>
   );

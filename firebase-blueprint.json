@@ -2,23 +2,68 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "User profile and permissions",
+      "description": "User profile, role, active status, and permissions",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "role": { "type": "string", "enum": ["admin", "sales"] },
+        "username": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
+        "role": { "type": "string", "enum": ["Admin", "Sales Officer"] },
+        "active": { "type": "boolean" },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "Dashboard": { "type": "string", "enum": ["None", "View", "Full"] },
+            "Sales": { "type": "string", "enum": ["None", "View", "Full"] },
+            "Repair": { "type": "string", "enum": ["None", "View", "Full"] },
+            "Settings": { "type": "string", "enum": ["None", "View", "Full"] }
+          }
+        },
         "phone": { "type": "string" },
         "bio": { "type": "string" },
-        "country": { "type": "string" },
-        "cityState": { "type": "string" },
-        "postalCode": { "type": "string" },
-        "taxId": { "type": "string" },
-        "avatarUrl": { "type": "string" }
+        "avatarUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
       },
-      "required": ["name", "role", "email"]
+      "required": ["name", "username", "role", "active", "permissions"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Sales record and invoice",
+      "type": "object",
+      "properties": {
+        "item": { "type": "string" },
+        "category": { "type": "string" },
+        "qty": { "type": "number" },
+        "amount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["item", "amount"]
+    },
+    "Repair": {
+      "title": "Repair",
+      "description": "Repair job ticket",
+      "type": "object",
+      "properties": {
+        "customer": { "type": "string" },
+        "phone": { "type": "string" },
+        "device": { "type": "string" },
+        "issue": { "type": "string" },
+        "cost": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["customer", "device"]
+    },
+    "Counter": {
+      "title": "Counter",
+      "description": "Sequential counter for invoices and job tickets",
+      "type": "object",
+      "properties": {
+        "count": { "type": "number" }
+      },
+      "required": ["count"]
     },
     "AppConfig": {
       "title": "App Branding Config",
@@ -38,12 +83,24 @@
       "schema": "User",
       "description": "User profile data linked by auth UID"
     },
-    "/settings/branding": {
+    "/sales/{saleId}": {
+      "schema": "Sale",
+      "description": "Sales invoices"
+    },
+    "/repairs/{repairId}": {
+      "schema": "Repair",
+      "description": "Repair tickets"
+    },
+    "/counters/{counterId}": {
+      "schema": "Counter",
+      "description": "Invoice and ticket sequential ID counters"
+    },
+    "/settings/{docId}": {
       "schema": "AppConfig",
-      "description": "Global branding configuration"
+      "description": "Global branding and application settings"
     },
     "/test/connection": {
-      "schema": { "type": "object", "properties": { "status": { "type": "string" } } },
+      "schema": { "$ref": "#/entities/AppConfig" },
       "description": "Connection test document"
     }
   }

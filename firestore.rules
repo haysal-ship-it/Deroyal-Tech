@@ -1,45 +1,132 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helpers
+
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-    function isAdmin() {
-      return isSignedIn() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
     }
 
-    // Rules
+    function userExists(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isUserActive(uid) {
+      return isSignedIn() &&
+        userExists(uid) &&
+        getUserData(uid).get('active', true) == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        userExists(request.auth.uid) &&
+        getUserData(request.auth.uid).role == 'Admin' &&
+        getUserData(request.auth.uid).get('active', true) == true;
+    }
+
+    function canReadSales() {
+      return isAdmin() || (
+        isUserActive(request.auth.uid) &&
+        getUserData(request.auth.uid).permissions.Sales in ['View', 'Full']
+      );
+    }
+
+    function canWriteSales() {
+      return isAdmin() || (
+        isUserActive(request.auth.uid) &&
+        getUserData(request.auth.uid).permissions.Sales == 'Full'
+      );
+    }
+
+    function canReadRepairs() {
+      return isAdmin() || (
+        isUserActive(request.auth.uid) &&
+        getUserData(request.auth.uid).permissions.Repair in ['View', 'Full']
+      );
+    }
+
+    function canWriteRepairs() {
+      return isAdmin() || (
+        isUserActive(request.auth.uid) &&
+        getUserData(request.auth.uid).permissions.Repair == 'Full'
+      );
+    }
+
+    // 1. Settings: read is public only for the branding doc, write admin-only
     match /settings/{docId} {
-      allow read: if true;
+      allow read: if docId == 'branding';
       allow write: if isAdmin();
     }
+
+    // 2. Users:
+    // Read by any signed-in active user only for their own document, and by admins for all.
+    // Create, delete and any change to role, permissions or active are admin-only.
+    // A normal user may update only name, phone, bio and avatarUrl.
     match /users/{userId} {
-      allow read: if isSignedIn();
-      allow write: if isOwner(userId) || isAdmin();
+      allow read: if isAdmin() || (
+        isSignedIn() &&
+        request.auth.uid == userId &&
+        resource.data.get('active', true) == true
+      );
+
+      allow create: if isAdmin() || (
+        isSignedIn() &&
+        request.auth.uid == userId &&
+        request.resource.data.role == 'Admin' &&
+        request.resource.data.active == true &&
+        !exists(/databases/$(database)/documents/settings/initialized)
+      );
+
+      allow delete: if isAdmin();
+
+      allow update: if isAdmin() || (
+        isSignedIn() &&
+        request.auth.uid == userId &&
+        resource.data.get('active', true) == true &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'bio', 'avatarUrl', 'mustChangePassword', 'lastLogin'])
+      );
     }
+
+    // 3. Sales:
+    // Create/update only if user's permissions.Sales is "Full"; read if it is "View" or "Full"; delete admin-only.
     match /sales/{saleId} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow read: if canReadSales();
+      allow create, update: if canWriteSales();
       allow delete: if isAdmin();
     }
+
+    // 4. Repairs:
+    // Create/update only if user's permissions.Repair is "Full"; read if it is "View" or "Full"; delete admin-only.
     match /repairs/{repairId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read: if canReadRepairs();
+      allow create, update: if canWriteRepairs();
+      allow delete: if isAdmin();
     }
+
+    // 5. Counters:
+    // Writable only by users who may create sales or repairs.
+    match /counters/{counterId} {
+      allow read: if canWriteSales() || canWriteRepairs();
+      allow write: if (counterId == 'sales' && canWriteSales()) ||
+                      (counterId == 'repairs' && canWriteRepairs()) ||
+                      isAdmin();
+    }
+
+    // 6. Activity logs: read and create by Admin only, immutable
+    match /activity_logs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Connection test document
     match /test/connection {
       allow read: if true;
-      allow write: if isSignedIn();
     }
-    match /counters/{counterId} {
-      allow read, write: if isSignedIn();
-    }
-    
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;
